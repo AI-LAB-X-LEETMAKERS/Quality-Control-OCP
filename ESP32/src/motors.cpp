@@ -15,7 +15,12 @@ void motorRun(t_motor *motor, bool forward, int speedPercent)
 {
     speedPercent = constrain(speedPercent, 0, 100);
 
-    int maxPWM = 255;
+	if (speedPercent == 0)
+	{
+		digitalWrite(motor->pinForward, LOW);
+    	digitalWrite(motor->pinReverse, LOW);
+		return ;
+	}
 
     int pwmCeiling;
     if (motor->type == MOTOR_5V)
@@ -28,4 +33,32 @@ void motorRun(t_motor *motor, bool forward, int speedPercent)
     digitalWrite(motor->pinForward, forward ? HIGH : LOW);
     digitalWrite(motor->pinReverse, forward ? LOW : HIGH);
     ledcWrite(motor->pwmChannel, pwmValue);
+}
+
+void handleMotorJson(state *g_state, const char* json)
+{
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, json);
+
+    if (error) {
+        Serial.print("JSON parse failed: ");
+        Serial.println(error.c_str());
+        return;
+    }
+
+    JsonObject motors = doc["motors"];
+
+    // Vibrator
+    if (motors["vibrator"].is<JsonObject>()) {
+        int speed = motors["vibrator"]["speed"];
+        bool forward = motors["vibrator"]["forward"];
+        motorRun(&g_state->vibrator, forward, speed);
+    }
+
+    // Cleaning
+    if (motors["cleaning"].is<JsonObject>()) {
+        int speed = motors["cleaning"]["speed"];
+        bool forward = motors["cleaning"]["forward"];
+        motorRun(&g_state->cleaning, forward, speed);
+    }
 }
