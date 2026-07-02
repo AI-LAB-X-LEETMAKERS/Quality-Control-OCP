@@ -6,6 +6,7 @@ state g_state = {};
 
 void setup() {
 	g_state.vibrator = {26, 27, 25, 0, 5000, 8, MOTOR_5V};
+	g_state.cleaning = {32, 33, 35, 1, 5000, 8, MOTOR_12V};
 	init_motor(&g_state.vibrator);
 }
 
