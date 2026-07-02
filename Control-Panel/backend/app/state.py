@@ -20,10 +20,16 @@ class DustSensor(BaseModel):
     value : float
     current: float
 
+class RPM(BaseModel):
+    value: int
+
 class StatMachine(BaseModel):
     rotator: Motor
     vibrator: Motor
     port: Motor
     dust: DustSensor
     weight: WeightSensor
+    rpm: RPM
+
+status_machine = StatMachine()
 
