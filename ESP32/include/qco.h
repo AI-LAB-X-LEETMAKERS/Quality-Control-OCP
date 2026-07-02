@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-
+#include <ArduinoJson.h>
 
 typedef enum
 {
@@ -23,4 +23,5 @@ typedef struct
 typedef struct 
 {
 	t_motor	vibrator;
+	t_motor	cleaning;
 }	state;
