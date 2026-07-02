@@ -23,4 +23,5 @@ typedef struct
 typedef struct 
 {
 	t_motor	vibrator;
+	t_motor	cleaning;
 }	state;
