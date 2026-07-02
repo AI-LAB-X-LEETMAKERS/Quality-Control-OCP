@@ -5,29 +5,37 @@ class Direction(Enum):
     RIGHT = 1
     LEFT = 2
 
+class Stats(Enum):
+    IDLE = "IDLE"
+    CALIBRATION = "CALIBRATION"
+    CLEANING = "CLEANING"
+    IMAGING = "IMAGING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+
 class Motor(BaseModel):
-    name : str
+    name : str | None
     speed: int | None
     direction: Direction | None
     angle: int | None
-    current: float
+    current: float | None
 
 class WeightSensor(BaseModel):
-    value: int 
-    current: float
+    value: int | None
+    current: float | None
 
 class DustSensor(BaseModel):
-    value : float
-    current: float
+    value : float | None
+    current: float | None
 
 class RPM(BaseModel):
-    value: int
+    value: int | None
 
 class StatMachine(BaseModel):
-    rotator: Motor
+    stats: Stats
+    cleaning: Motor
     vibrator: Motor
     port: Motor
-    dust: DustSensor
     weight: WeightSensor
     rpm: RPM
 
