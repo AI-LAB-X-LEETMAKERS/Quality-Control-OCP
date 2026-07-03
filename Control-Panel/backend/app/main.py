@@ -1,24 +1,26 @@
 from fastapi import FastAPI
 import uvicorn
-from app.serial_handler import serial
+from app.serial_handler import serial , serial_lock
 from app.state import status_machine
 from routers.motor import MotorRoute
-# uvicorn app.main:app --host 0.0.0.0 --port 8000
 from routers.dustsensor import DustRouter
+
 
 app = FastAPI()
 
 @app.get("/on")
 async def on():
-    await serial.write_async(b"1\n")
-    return {
-        "status": "on"}
+    async with serial_lock:
+        await serial.write_async(b"1\n")
+        return {
+            "status": "on"}
 
 @app.get("/off")
 async def off():
-    await serial.write_async(b"0\n")
-    return {
-        "status": "off"}
+    async with serial_lock:
+        await serial.write_async(b"0\n")
+        return {
+            "status": "off"}
 
 #context manager for startup and wait for the response to display it and allow the user to start the machine
 routers = [DustRouter, MotorRoute]

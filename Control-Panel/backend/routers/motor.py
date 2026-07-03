@@ -10,9 +10,13 @@ from app.state import Motor
 
 MotorRoute = APIRouter(tags=["motor"])
 
+
 @MotorRoute.post("/motor", status_code = 200)
 async def control_motor(data: Motor):
     try:
+        request = f"name:{data.name},\
+            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        
         return {"status": "up"}
     except HTTPException:
         raise
