@@ -10,6 +10,8 @@ from app.state import DustSensor
 
 DustRouter = APIRouter(tags=["dust"])
 
+Internal_error: HTTPException = HTTPException(status_code = 500, detail = "Dust Internal error")
+
 @DustRouter.post("/dust", status_code = 200)
 async def control_motor(data: DustSensor):
     try:
