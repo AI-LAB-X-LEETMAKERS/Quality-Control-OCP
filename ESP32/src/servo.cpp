@@ -26,12 +26,18 @@ void handleServoJson(state *g_state, const char* json)
     // Port
     if (servos["port"].is<JsonObject>()) {
         int angle = servos["port"]["angle"];
-        turn_servo(&g_state->port, angle);
-    }
+		g_state->port.angle = angle;
+    } 
 
     // Lock
     if (servos["lock"].is<JsonObject>()) {
         int angle = servos["lock"]["angle"];
-        turn_servo(&g_state->lock, angle);
+		g_state->lock.angle = angle;
     }
+}
+
+void handleServo(state *g_state)
+{
+	turn_servo(&g_state->lock, g_state->lock.angle);
+	turn_servo(&g_state->port, g_state->port.angle);
 }

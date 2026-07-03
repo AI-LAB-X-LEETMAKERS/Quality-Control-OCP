@@ -19,6 +19,8 @@ typedef struct
     int         pwmFreq;
     int         pwmResolution;
     MOTOR_TYPE  type;
+	bool		forward;
+	int			speed;
 }       t_motor;
 
 typedef struct 
