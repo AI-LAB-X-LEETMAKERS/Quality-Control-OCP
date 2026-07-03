@@ -13,7 +13,6 @@ MotorRoute = APIRouter(tags=["motor"])
 @MotorRoute.post("/motor", status_code = 200)
 async def control_motor(data: Motor):
     try:
-        
         return {"status": "up"}
     except HTTPException:
         raise
