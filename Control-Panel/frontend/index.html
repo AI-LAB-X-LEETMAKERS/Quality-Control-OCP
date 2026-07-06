@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Control panel for the machine backend" />
+    <title>Control Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Quality Control Panel</p>
+          <h1>Manual machine control, directly from the browser.</h1>
+          <p class="lede">
+            This frontend is framework-free and talks to the FastAPI backend with simple fetch calls.
+          </p>
+        </div>
+        <div class="status-card">
+          <span class="status-label">Backend</span>
+          <strong id="backend-status">Ready</strong>
+          <p>Target: <span id="api-base">http://localhost:8000</span></p>
+        </div>
+      </section>
+
+      <section class="panel-grid">
+        <article class="panel accent">
+          <h2>Power</h2>
+          <p>Toggle the machine state.</p>
+          <div class="button-row">
+            <button class="primary" data-action="on">Turn On</button>
+            <button class="secondary" data-action="off">Turn Off</button>
+          </div>
+        </article>
+
+        <article class="panel">
+          <h2>Motor Commands</h2>
+          <form id="motor-form" class="motor-form">
+            <label>
+              Name
+              <input name="name" type="text" value="cleaner" />
+            </label>
+            <label>
+              Speed
+              <input name="speed" type="number" value="100" min="0" />
+            </label>
+            <label>
+              Direction
+              <select name="direction">
+                <option value="RIGHT">RIGHT</option>
+                <option value="LEFT">LEFT</option>
+              </select>
+            </label>
+            <label>
+              Angle
+              <input name="angle" type="number" value="0" />
+            </label>
+            <label>
+              Current
+              <input name="current" type="number" value="0" step="0.1" />
+            </label>
+          </form>
+          <div class="motor-actions" id="motor-actions">
+            <button data-motor="lock">Lock</button>
+            <button data-motor="port">Port</button>
+            <button data-motor="cleaner">Cleaner</button>
+            <button data-motor="vibrator">Vibrator</button>
+            <button data-motor="vacum">Vacum</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="panel-header">
+          <h2>Response Log</h2>
+          <button id="clear-log" class="ghost">Clear</button>
+        </div>
+        <pre id="log">Waiting for a command...</pre>
+      </section>
+    </main>
+
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>
