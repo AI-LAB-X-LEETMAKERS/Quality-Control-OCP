@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <ESP32Servo.h>
 
 typedef enum
 {
@@ -18,10 +19,20 @@ typedef struct
     int         pwmFreq;
     int         pwmResolution;
     MOTOR_TYPE  type;
+	bool		forward;
+	int			speed;
 }       t_motor;
 
 typedef struct 
 {
+	int		pin;
+	int		angle;
+	Servo	servo;
+}	t_servo;
+typedef struct 
+{
 	t_motor	vibrator;
 	t_motor	cleaning;
+	t_servo port;
+	t_servo lock;
 }	state;
