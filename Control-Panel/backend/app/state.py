@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 class Direction(Enum):
-    RIGHT = 1
-    LEFT = 2
+    RIGHT = "RIGHT"
+    LEFT = "LEFT"
 
 class Stats(Enum):
     IDLE = "IDLE"

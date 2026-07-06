@@ -5,9 +5,23 @@ from app.state import status_machine
 from routers.motor import MotorRoute
 from routers.dustsensor import DustRouter
 from routers.wb import wb
-
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,           
+    allow_credentials=True,
+    allow_methods=["*"],             
+    allow_headers=["*"], 
+)
 
 @app.get("/on")
 async def on():
