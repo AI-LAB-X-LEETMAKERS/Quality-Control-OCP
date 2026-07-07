@@ -46,17 +46,13 @@ void handleMotorJson(state *g_state, const char* json)
         return;
     }
 
-    JsonObject motors = doc["motors"];
-
-    // Vibrator
-    if (motors["vibrator"].is<JsonObject>()) {
-        int speed = motors["vibrator"]["speed"];
-        bool forward = motors["vibrator"]["forward"];
+    if (doc["vibrator"].is<JsonObject>()) {
+        int speed = doc["vibrator"]["speed"] | 0;
+        bool forward = doc["vibrator"]["forward"] | true;
         g_state->vibrator.forward = forward;
         g_state->vibrator.speed = speed;
     }
 }
-
 void handleMotor(state *g_state)
 {
 	 motorRun(&g_state->vibrator, g_state->vibrator.forward, g_state->vibrator.speed);
