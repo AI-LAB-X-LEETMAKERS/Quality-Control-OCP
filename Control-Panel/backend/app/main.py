@@ -9,35 +9,28 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-origins = [
-    "http://localhost:3000",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,           
-    allow_credentials=True,
+    allow_origins=["*"],           
+    allow_credentials=False,
     allow_methods=["*"],             
     allow_headers=["*"], 
 )
 
-@app.get("/on")
+@app.get("/on", status_code = 200)
 async def on():
     async with serial_lock:
         await serial.write_async(b"1\n")
         return {
             "status": "on"}
 
-@app.get("/off")
+@app.get("/off", status_code = 200)
 async def off():
     async with serial_lock:
         await serial.write_async(b"0\n")
         return {
             "status": "off"}
 
-#context manager for startup and wait for the response to display it and allow the user to start the machine
 routers = [DustRouter, MotorRoute, wb]
 
 for router in routers:

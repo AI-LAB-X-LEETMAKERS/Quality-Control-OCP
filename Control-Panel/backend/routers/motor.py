@@ -9,63 +9,133 @@ from app.serial_handler import serial_lock, serial
 #     angle: int | None
 #     current: float | None
 
+# {
+#   "cleaning": {
+#     "speed": 50,
+#     "forward": true
+#   },
+#   "vibrator": {
+#     "speed": 50,
+#     "forward": true
+#   },
+#   "port": {
+#     "angle": 90
+#   },
+#   "lock": {
+#     "angle": 120
+#   }
+# }
 MotorRoute = APIRouter(tags=["motor"])
 
-Internal_error: HTTPException = HTTPException(status_code = 500, detail="Motor internal error") 
+Internal_error: HTTPException = HTTPException(status_code=500, detail="Motor internal error") 
 
-@MotorRoute.post("/lock", status_code = 200)
+@MotorRoute.post("/lock", status_code=200)
 async def control_lock(data: Motor):
     try:
-        request = f"name:{data.name},\
-            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        is_forward = "true" if data.direction == "RIGHT" else "false"        
+        request = (
+            f'{{\n'
+            f'  "lock": {{\n'
+            f'    "speed": {data.speed},\n'
+            f'    "forward": {is_forward},\n'
+            f'    "angle": {data.angle}\n'
+            f'  }}\n'
+            f'}}\n'
+        )
+        
         async with serial_lock:
-            await serial.write_async(request.encode()) # always encode data to utf-8 before writing to the serial same for reading from the serial always decode
-        return {"status": "up"}
+            await serial.write_async(request.encode())
+        return {"current": 30}
     except HTTPException:
         raise
     except Exception as e:
         raise Internal_error
 
-@MotorRoute.post("/port", status_code = 200)
+@MotorRoute.post("/port", status_code=200)
 async def control_port(data: Motor):
     try:
-        request = f"name:{data.name},\
-            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        is_forward = "true" if data.direction == "RIGHT" else "false"
+        
+        request = (
+            f'{{\n'
+            f'  "port": {{\n'
+            f'    "speed": {data.speed},\n'
+            f'    "forward": {is_forward},\n'
+            f'    "angle": {data.angle}\n'
+            f'  }}\n'
+            f'}}\n'
+        )
+        
         async with serial_lock:
-            await serial.write_async(request.encode()) #always encode data to utf-8 before writing to the serial same for reading from the serial always decode
-        return {"status": "up"}
+            await serial.write_async(request.encode())
+        return {"current": 30}
     except HTTPException:
         raise Internal_error
+    except Exception as e:
+        raise Internal_error
     
-@MotorRoute.post("/cleaner", status_code = 200)
+@MotorRoute.post("/cleaner", status_code=200)
 async def control_cleaner(data: Motor):
     try:
-        request = f"name:{data.name},\
-            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        is_forward = "true" if data.direction == "RIGHT" else "false"
+        
+        request = (
+            f'{{\n'
+            f'  "cleaning": {{\n'
+            f'    "speed": {data.speed},\n'
+            f'    "forward": {is_forward}\n'
+            f'  }}\n'
+            f'}}\n'
+        )
+        
         async with serial_lock:
-            await serial.write_async(request.encode()) #always encode data to utf-8 before writing to the serial same for reading from the serial always decode
-        return {"status": "up"}
+            await serial.write_async(request.encode())
+        return {"current": 30}
     except HTTPException:
         raise Internal_error
+    except Exception as e:
+        raise Internal_error
     
-@MotorRoute.post("/vibrator", status_code = 200)
+@MotorRoute.post("/vibrator", status_code=200)
 async def control_vibrator(data: Motor):
     try:
-        request = f"name:{data.name},\
-            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        is_forward = "true" if data.direction == "RIGHT" else "false"
+        
+        request = (
+            f'{{\n'
+            f'  "vibrator": {{\n'
+            f'    "speed": {data.speed},\n'
+            f'    "forward": {is_forward}\n'
+            f'  }}\n'
+            f'}}\n'
+        )
+        
         async with serial_lock:
-            await serial.write_async(request.encode()) #always encode data to utf-8 before writing to the serial same for reading from the serial always decode
-        return {"status": "up"}
+            await serial.write_async(request.encode())
+        return {"current": 30}
     except HTTPException:
         raise Internal_error
+    except Exception as e:
+        raise Internal_error
     
-@MotorRoute.post("/vacum", status_code = 200)
+@MotorRoute.post("/vacum", status_code=200)
 async def control_vacum(data: Motor):
     try:
-        request = f"name:{data.name},\
-            speed:{data.speed},direction:{data.direction},angle:{data.angle},current:0\n"
+        is_forward = "true" if data.direction == "RIGHT" else "false"
+        
+        request = (
+            f'{{\n'
+            f'  "vacum": {{\n'
+            f'    "speed": {data.speed},\n'
+            f'    "forward": {is_forward}\n'
+            f'  }}\n'
+            f'}}\n'
+        )
+        
         async with serial_lock:
-            await serial.write_async(request.encode()) #always encode data to utf-8 before writing to the serial same for reading from the serial always decode
-        return {"status": "up"}
+            await serial.write_async(request.encode())
+        return {"current": 30}
     except HTTPException:
+        raise Internal_error
+    except Exception as e:
         raise Internal_error
