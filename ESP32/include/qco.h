@@ -23,6 +23,18 @@ typedef struct
 	int			speed;
 }       t_motor;
 
+typedef struct
+{
+    int             pinDir;
+    int             pinStep;
+    int             minDelayUs;     // delay at 100% speed (fastest)
+    int             maxDelayUs;     // delay at 1% speed (slowest)
+    bool            forward;
+    int             speed;          // 0-100
+    unsigned long   lastStepTime;
+    bool            stepState;
+}       t_stepper;
+
 typedef struct 
 {
 	int		pin;
@@ -31,8 +43,8 @@ typedef struct
 }	t_servo;
 typedef struct 
 {
-	t_motor	vibrator;
-	t_motor	cleaning;
-	t_servo port;
-	t_servo lock;
+	t_motor		vibrator;
+	t_stepper	cleaning;
+	t_servo 	port;
+	t_servo 	lock;
 }	state;
