@@ -1,9 +1,10 @@
 import { API_BASE_URL, ENDPOINTS } from "./config.js";
 
 async function request(path, options = {}) {
+  const hasBody = options.body !== undefined && options.body !== null;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
-      "Content-Type": "application/json",
+      ...(hasBody ? { "Content-Type": "application/json" } : {}),
       ...(options.headers ?? {}),
     },
     ...options,
