@@ -4,6 +4,7 @@ from app.serial_handler import serial , serial_lock
 from app.state import status_machine
 from routers.motor import MotorRoute
 from routers.dustsensor import DustRouter
+from routers.wb import wb
 
 
 app = FastAPI()
@@ -23,7 +24,7 @@ async def off():
             "status": "off"}
 
 #context manager for startup and wait for the response to display it and allow the user to start the machine
-routers = [DustRouter, MotorRoute]
+routers = [DustRouter, MotorRoute, wb]
 
 for router in routers:
     app.include_router(router)
