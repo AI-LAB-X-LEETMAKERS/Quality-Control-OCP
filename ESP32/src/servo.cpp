@@ -21,18 +21,22 @@ void handleServoJson(state *g_state, const char* json)
         return;
     }
 
-    JsonObject servos = doc["servos"];
-
     // Port
-    if (servos["port"].is<JsonObject>()) {
-        int angle = servos["port"]["angle"];
-		g_state->port.angle = angle;
-    } 
+    if (doc["port"].is<JsonObject>()) {
+        int angle = doc["port"]["angle"] | 0;
+
+        Serial.printf("Set port angle to %d\n", angle);
+
+        g_state->port.angle = angle;
+    }
 
     // Lock
-    if (servos["lock"].is<JsonObject>()) {
-        int angle = servos["lock"]["angle"];
-		g_state->lock.angle = angle;
+    if (doc["lock"].is<JsonObject>()) {
+        int angle = doc["lock"]["angle"] | 0;
+
+        Serial.printf("Set lock angle to %d\n", angle);
+
+        g_state->lock.angle = angle;
     }
 }
 

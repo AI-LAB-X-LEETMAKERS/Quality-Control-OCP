@@ -40,14 +40,12 @@ void handleStepperJson(state *g_state, const char* json)
         return;
     }
 
-    JsonObject steppers = doc["steppers"];
-
-    if (steppers["cleaning"].is<JsonObject>()) {
-        int speed = steppers["cleaning"]["speed"];
-        bool forward = steppers["cleaning"]["forward"];
+    if (doc["cleaning"].is<JsonObject>()) {
+        int speed = doc["cleaning"]["speed"] | 0;
+        bool forward = doc["cleaning"]["forward"] | true;
         g_state->cleaning.forward = forward;
         g_state->cleaning.speed = speed;
-    } 
+    }
 }
 
 void handleStepper(state *g_state)

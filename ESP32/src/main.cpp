@@ -6,10 +6,10 @@
 state g_state = {};
 
 void setup() {
-	Serial.begin(115200);
+	Serial.begin(9600);
 
 	g_state.vibrator = {26, 27, 25, 0, 5000, 8, MOTOR_5V, false, 0};
-	g_state.cleaning = {16, 15, 1000, 2000, true, 100};
+	g_state.cleaning = {16, 15, 1000, 2000, true, 0};
 	g_state.port = {33, 0};
 	g_state.lock = {17, 0};
 	init_motor(&g_state.vibrator);
@@ -27,6 +27,7 @@ void loop()
         if (incoming.length() > 0) {
             handleServoJson(&g_state, incoming.c_str());
             handleMotorJson(&g_state, incoming.c_str());
+            handleStepperJson(&g_state, incoming.c_str());
         }
     }
 	handleServo(&g_state);
