@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 class Direction(Enum):
-    RIGHT = 1
-    LEFT = 2
+    RIGHT = "RIGHT"
+    LEFT = "LEFT"
 
 class Stats(Enum):
     IDLE = "IDLE"
@@ -18,7 +18,6 @@ class Motor(BaseModel):
     speed: int | None = 0
     direction: Direction | None = Direction.RIGHT
     angle: int | None = 0
-    current: float | None = 0
 
 class WeightSensor(BaseModel):
     value: int | None = 0

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machine Interface Management</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f5;
+            --card-bg: #ffffff;
+            --primary-green: #1e7041;
+            --primary-green-hover: #175632;
+            --text-dark: #1a261f;
+            --text-muted: #5c6e63;
+            --border-color: #dae3dd;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --radius: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.5;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .interface-container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        /* Tabs Styling */
+        .tab-navigation {
+            display: inline-flex;
+            background-color: var(--card-bg);
+            padding: 6px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: calc(var(--radius) - 2px);
+            transition: all 0.2s ease;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-green);
+        }
+
+        .tab-button.active {
+            background-color: var(--primary-green);
+            color: var(--card-bg);
+        }
+
+        /* Views Visibility */
+        .view-panel {
+            display: none;
+        }
+
+        .view-panel.active {
+            display: block;
+        }
+        
+        .view-panel.active-view {
+            display: block;
+        }
+
+        /* Dashboard Design */
+        .dashboard-card {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 32px;
+        }
+
+        .panel-header {
+            margin-bottom: 28px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .panel-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 4px;
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .grid-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 4px;
+        }
+
+        .stat-meta {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .action-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            background-color: var(--primary-green);
+            color: var(--card-bg);
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-green-hover);
+        }
+
+        /* Control Panel Postcard Layout Grid */
+        .control-panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* Individual Postcard Items */
+        .postcard-item {
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            max-width: 340px;
+            width: 100%;
+            justify-self: center;
+        }
+
+        .postcard-item.power-card {
+            grid-column: 1 / -1;
+            max-width: 1000px;
+            justify-self: stretch;
+        }
+
+        .component-header {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-green);
+            margin-bottom: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .power-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .power-buttons {
+            display: flex;
+            gap: 10px;
+            max-width: 300px;
+        }
+
+        .btn-toggle {
+            flex: 1;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            color: var(--text-dark);
+            transition: all 0.2s;
+        }
+
+        .btn-toggle.power-button-active {
+            background-color: var(--primary-green);
+            color: var(--card-bg);
+            border-color: var(--primary-green);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .form-group-full {
+            grid-column: span 2;
+        }
+
+        .field-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 13px;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary-green);
+        }
+
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%235c6e63' d='M0 0l5 5 5-5z'/></svg>");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        
+        .log-terminal {
+            margin-top: 24px;
+            background-color: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        
+        .log-terminal pre {
+            background: var(--bg-color);
+            padding: 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            font-family: monospace;
+            font-size: 12px;
+            height: 150px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="interface-container">
+        <!-- Website Header -->
+        <header style="margin-bottom: 32px; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: 24px;">
+            <h1 style="color: var(--primary-green); font-size: 32px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px;">OCP Quality Control</h1>
+            <p style="color: var(--text-muted); font-size: 15px; font-weight: 500;">Machine Interface Management System</p>
+        </header>
+
+        <!-- Tabs Section -->
+        <div class="tab-navigation">
+            <button class="tab-button nav-tab active" data-section-target="dashboard-section">Dashboard</button>
+            <button class="tab-button nav-tab" data-section-target="control-section">Control Panel</button>
+        </div>
+
+        <!-- Dashboard Panel View -->
+        <div id="dashboard-section" class="view-panel section-view active-view">
+            <div class="dashboard-card">
+                <div class="panel-header">
+                    <h1 class="panel-title">Dashboard Summary</h1>
+                    <p class="panel-subtitle">Simple grid overview of the current panel state.</p>
+                </div>
+
+                <div class="grid-overview">
+                    <div class="stat-card">
+                        <div class="stat-label">Status</div>
+                        <div class="stat-value" id="dashboard-status">IDLE</div>
+                        <div class="stat-meta">Machine state</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">RPM</div>
+                        <div class="stat-value" id="dashboard-rpm">--</div>
+                        <div class="stat-meta">Motor speed</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Dust Sensor</div>
+                        <div class="stat-value" id="dashboard-dust">--</div>
+                        <div class="stat-meta">Dust level</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-label">Time Elapsed</div>
+                        <div class="stat-value" id="dashboard-elapsed">00:00:00</div>
+                        <div class="stat-meta">Since machine start</div>
+                    </div>
+                </div>
+
+                <div class="action-container">
+                    <button class="btn" id="start-machine">Start Machine</button>
+                </div>
+            </div>
+            
+            <div class="log-terminal">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="color: var(--primary-green); font-size: 16px;">System Log</h3>
+                    <button id="clear-log" class="btn" style="padding: 6px 12px; font-size: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color);">Clear</button>
+                </div>
+                <pre id="log">Waiting for a command...</pre>
+            </div>
+        </div>
+
+        <!-- Control Panel View (Mini-Postcard Grid Layout) -->
+        <div id="control-section" class="view-panel section-view">
+            <div class="control-panel-grid">
+                
+                <!-- Power Mini Postcard -->
+                <div class="postcard-item power-card">
+                    <div class="component-header">Power Configuration</div>
+                    <div class="power-desc">Toggle the machine state.</div>
+                    <div class="power-buttons">
+                        <button class="btn-toggle power-button" data-action="on">Turn On</button>
+                        <button class="btn-toggle power-button power-button-active" data-action="off">Turn Off</button>
+                    </div>
+                </div>
+
+                <!-- Port Postcard -->
+                <div class="postcard-item component-form" data-motor="port">
+                    <div class="component-header">Port</div>
+                    <div class="form-grid">
+                        <div class="form-group-full">
+                            <label class="field-label">Name</label>
+                            <input name="name" type="text" class="input-field" value="port" readonly>
+                        </div>
+                        <div>
+                            <label class="field-label">Speed</label>
+                            <input name="speed" type="number" class="input-field" value="100">
+                        </div>
+                        <div>
+                            <label class="field-label">Direction</label>
+                            <select name="direction" class="input-field">
+                                <option value="RIGHT" selected>RIGHT</option>
+                                <option value="LEFT">LEFT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Angle</label>
+                            <input name="angle" type="number" class="input-field" value="0">
+                        </div>
+                        <div>
+                            <label class="field-label">Current</label>
+                            <input name="current" type="text" class="input-field" value="-- A" readonly style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" class="btn component-action" style="width: 100%; margin-top: 8px;" data-motor="port">Apply Port Config</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vibrator Postcard -->
+                <div class="postcard-item component-form" data-motor="vibrator">
+                    <div class="component-header">Vibrator</div>
+                    <div class="form-grid">
+                        <div class="form-group-full">
+                            <label class="field-label">Name</label>
+                            <input name="name" type="text" class="input-field" value="vibrator" readonly>
+                        </div>
+                        <div>
+                            <label class="field-label">Speed</label>
+                            <input name="speed" type="number" class="input-field" value="80">
+                        </div>
+                        <div>
+                            <label class="field-label">Direction</label>
+                            <select name="direction" class="input-field">
+                                <option value="RIGHT" selected>RIGHT</option>
+                                <option value="LEFT">LEFT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Angle</label>
+                            <input name="angle" type="number" class="input-field" value="0">
+                        </div>
+                        <div>
+                            <label class="field-label">Current</label>
+                            <input name="current" type="text" class="input-field" value="-- A" readonly style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" class="btn component-action" style="width: 100%; margin-top: 8px;" data-motor="vibrator">Apply Vibrator Config</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cleaner Postcard -->
+                <div class="postcard-item component-form" data-motor="cleaner">
+                    <div class="component-header">Cleaner</div>
+                    <div class="form-grid">
+                        <div class="form-group-full">
+                            <label class="field-label">Name</label>
+                            <input name="name" type="text" class="input-field" value="cleaner" readonly>
+                        </div>
+                        <div>
+                            <label class="field-label">Speed</label>
+                            <input name="speed" type="number" class="input-field" value="100">
+                        </div>
+                        <div>
+                            <label class="field-label">Direction</label>
+                            <select name="direction" class="input-field">
+                                <option value="RIGHT" selected>RIGHT</option>
+                                <option value="LEFT">LEFT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Angle</label>
+                            <input name="angle" type="number" class="input-field" value="0">
+                        </div>
+                        <div>
+                            <label class="field-label">Current</label>
+                            <input name="current" type="text" class="input-field" value="-- A" readonly style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" class="btn component-action" style="width: 100%; margin-top: 8px;" data-motor="cleaner">Apply Cleaner Config</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lock Postcard -->
+                <div class="postcard-item component-form" data-motor="lock">
+                    <div class="component-header">Lock</div>
+                    <div class="form-grid">
+                        <div class="form-group-full">
+                            <label class="field-label">Name</label>
+                            <input name="name" type="text" class="input-field" value="lock" readonly>
+                        </div>
+                        <div>
+                            <label class="field-label">Speed</label>
+                            <input name="speed" type="number" class="input-field" value="70">
+                        </div>
+                        <div>
+                            <label class="field-label">Direction</label>
+                            <select name="direction" class="input-field">
+                                <option value="RIGHT" selected>RIGHT</option>
+                                <option value="LEFT">LEFT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Angle</label>
+                            <input name="angle" type="number" class="input-field" value="0">
+                        </div>
+                        <div>
+                            <label class="field-label">Current</label>
+                            <input name="current" type="text" class="input-field" value="-- A" readonly style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" class="btn component-action" style="width: 100%; margin-top: 8px;" data-motor="lock">Apply Lock Config</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vacuum Postcard -->
+                <div class="postcard-item component-form" data-motor="vacum">
+                    <div class="component-header">Vacuum</div>
+                    <div class="form-grid">
+                        <div class="form-group-full">
+                            <label class="field-label">Name</label>
+                            <input name="name" type="text" class="input-field" value="vacum" readonly>
+                        </div>
+                        <div>
+                            <label class="field-label">Speed</label>
+                            <input name="speed" type="number" class="input-field" value="90">
+                        </div>
+                        <div>
+                            <label class="field-label">Direction</label>
+                            <select name="direction" class="input-field">
+                                <option value="RIGHT" selected>RIGHT</option>
+                                <option value="LEFT">LEFT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="field-label">Angle</label>
+                            <input name="angle" type="number" class="input-field" value="0">
+                        </div>
+                        <div>
+                            <label class="field-label">Current</label>
+                            <input name="current" type="text" class="input-field" value="-- A" readonly style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" class="btn component-action" style="width: 100%; margin-top: 8px;" data-motor="vacum">Apply Vacuum Config</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+</body>
+</html>
