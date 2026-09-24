@@ -44,3 +44,7 @@ export function sendMotorCommand(action, motor) {
     body: JSON.stringify(motor),
   });
 }
+
+export function runMachineTest() {
+  return request(ENDPOINTS.on, { method: "GET" });
+}
