@@ -1,4 +1,6 @@
-export const API_BASE_URL = "http://localhost:8000";
+const hostname = typeof window !== "undefined" && window.location.hostname ? window.location.hostname : "localhost";
+
+export const API_BASE_URL = `http://${hostname}:8000`;
 
 export const ENDPOINTS = {
   on: "/on",
