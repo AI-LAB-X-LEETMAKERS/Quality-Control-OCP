@@ -210,3 +210,8 @@ source .venv/bin/activate
 
 ### USAGE
     refer to the official documentation of pylon for pypylon 
+
+### what's missing
+   converting the imgs to RGB8 for colour
+   live streaming with cv2
+   calibrate constract and FPS
