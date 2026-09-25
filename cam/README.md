@@ -208,6 +208,5 @@ The paths should point into the project `.venv`. Activate it again if necessary:
 source .venv/bin/activate
 ```
 
-### The USB device number changed
-
-This is normal. A reconnect can change `/dev/bus/usb/002/002` to `/dev/bus/usb/002/003`. Use `lsusb` to identify the camera and rely on the udev rule rather than a fixed device path.
+### USAGE
+    refer to the official documentation of pylon for pypylon 
