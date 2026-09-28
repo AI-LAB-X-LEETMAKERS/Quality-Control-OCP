@@ -3,3 +3,6 @@ build:
 
 run:
 	@python3 setup.py
+
+clean:
+	rm -rf output/image*

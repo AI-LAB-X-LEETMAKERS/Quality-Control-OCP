@@ -8,24 +8,22 @@ try:
         print("no camera detected")
         raise Exception()
     print(f"{devices[0].GetFriendlyName()}")
-    device = factory.CreateDevice(devices[0])
+    print(f"{devices[0].GetSerialNumber()}")
 
-    with pylon.InstantCamera(device) as cam: #open the cam 
-        cam.StartGrabbingMax(pylon.GrabStrategy_LatestImageOnly)
+    with pylon.InstantCamera(pylon.FirstFound) as cam:  
+        cam.StartGrabbingMax(30, pylon.GrabStrategy_OneByOne) 
+        count = 1
+        print("Capturing images...")
         while cam.IsGrabbing():
             with cam.RetrieveResult(5000) as result:
                 if not result.GrabSucceeded():
                     print("error Retrieving from buffer queue")
                     raise Exception()
-                image = result.Array # make sure to copy using Array to use later...i need to remind myself of that for sure
-                print(image.shape) # the Array basically is a Numpy array and Shape represent the metadata (W,H)
-                print(image.dtype)
-                print(result.PixelType)
-                cv2.imwrite("output/image.png", image)
-                cv2.imshow("basler", image)
-                if cv2.waitKey(1) == 27:
-                    break
+                image = result.Array 
+                cv2.imwrite(f"output/image{count}.png", image)
+                count += 1
         cv2.destroyAllWindows()
+        print("done")
 except Exception as e:
     print(e)
 
