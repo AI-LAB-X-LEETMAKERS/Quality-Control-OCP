@@ -3,19 +3,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# from app.serial_handler import serial, serial_lock
-# # from app.sps30_service import sps30_service
+from app.serial_handler import serial, serial_lock
+from app.sps30_service import sps30_service
 # from routers.motor import MotorRoute
-# from routers.dustsensor import DustRouter
+from routers.dustsensor import DustRouter
 # from routers.ws import ws
 
 
-# @asynccontextmanager
-# async def lifespan(app: FastAPI):
-#     sps30_service.init_hardware()
-#     await sps30_service.start_service()
-#     yield
-#     await sps30_service.stop_service()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    sps30_service.init_hardware()
+    await sps30_service.start_service()
+    yield
+    await sps30_service.stop_service()
 
 
 app = FastAPI()
@@ -48,7 +48,7 @@ def stattus():
 #     return {"status": "off"}
 
 
-routers = [DustRouter, MotorRoute, ws]
+routers = [DustRouter]
 
 for router in routers:
     app.include_router(router)
