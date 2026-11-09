@@ -28,6 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/status", status_code=200)
+def stattus():
+    return {"status" : "alive"}
 
 @app.get("/on", status_code=200)
 async def on():

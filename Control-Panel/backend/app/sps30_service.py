@@ -46,7 +46,6 @@ class SPS30Service:
         }
 
     def init_hardware(self):
-        """Initialize connection to physical SPS30 sensor. Exits on failure."""
         try:
             self.port = ShdlcSerialPort(port=self.port_path, baudrate=self.baudrate)
             self.device = Sps30UartDevice(ShdlcConnection(self.port), slave_address=0)
@@ -147,7 +146,6 @@ class SPS30Service:
                     reading = await asyncio.to_thread(self._read_sensor_blocking)
                     if reading:
                         self.latest_data = reading
-                        # Update shared state machine
                         status_machine.dust.pm1_0 = reading["pm1_0"]
                         status_machine.dust.pm2_5 = reading["pm2_5"]
                         status_machine.dust.pm4_0 = reading["pm4_0"]
@@ -161,7 +159,6 @@ class SPS30Service:
                         status_machine.dust.value = reading["pm2_5"]
                         status_machine.dust.status = "MEASURING"
 
-                        # Broadcast to all registered WebSocket listeners
                         for listener in list(self._listeners):
                             try:
                                 await listener(reading)
