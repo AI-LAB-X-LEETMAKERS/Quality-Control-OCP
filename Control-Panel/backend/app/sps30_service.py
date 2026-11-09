@@ -24,6 +24,12 @@ except ImportError as e:
     sys.exit(1)
 
 
+def _extract_val(item):
+    if hasattr(item, "value"):
+        return float(item.value)
+    return float(item)
+
+
 class SPS30Service:
     def __init__(self, port: str = PORT, baudrate: int = BAUDRATE):
         self.port_path = port
@@ -195,26 +201,41 @@ class SPS30Service:
                 except Exception:
                     pass
 
-            raw = self.device.read_measurement_values_float()
+            raw = None
+            for candidate in ["read_measured_values_float", "read_measured_values", "read_measured_values_ticks"]:
+                if hasattr(self.device, candidate):
+                    try:
+                        raw = getattr(self.device, candidate)()
+                        break
+                    except Exception:
+                        pass
+
+            if raw is None:
+                return None
 
             # Handle unpacked tuple/list or object format
-            if isinstance(raw, (list, tuple)) and len(raw) >= 10:
-                pm1_0, pm2_5, pm4_0, pm10_0, nc0_5, nc1_0, nc2_5, nc4_0, nc10_0, typical_size = raw[:10]
-            elif hasattr(raw, "pm1p0"):
-                pm1_0 = raw.pm1p0.value
-                pm2_5 = raw.pm2p5.value
-                pm4_0 = raw.pm4p0.value
-                pm10_0 = raw.pm10p0.value
-                nc0_5 = raw.nc0p5.value
-                nc1_0 = raw.nc1p0.value
-                nc2_5 = raw.nc2p5.value
-                nc4_0 = raw.nc4p0.value
-                nc10_0 = raw.nc10p0.value
-                typical_size = raw.typical_particle_size.value
+            if isinstance(raw, (list, tuple)) and len(raw) >= 4:
+                pm1_0 = _extract_val(raw[0])
+                pm2_5 = _extract_val(raw[1])
+                pm4_0 = _extract_val(raw[2])
+                pm10_0 = _extract_val(raw[3])
+                nc0_5 = _extract_val(raw[4]) if len(raw) >= 5 else 0.0
+                nc1_0 = _extract_val(raw[5]) if len(raw) >= 6 else 0.0
+                nc2_5 = _extract_val(raw[6]) if len(raw) >= 7 else 0.0
+                nc4_0 = _extract_val(raw[7]) if len(raw) >= 8 else 0.0
+                nc10_0 = _extract_val(raw[8]) if len(raw) >= 9 else 0.0
+                typical_size = _extract_val(raw[9]) if len(raw) >= 10 else 0.0
             else:
-                pm1_0, pm2_5, pm4_0, pm10_0 = raw[0], raw[1], raw[2], raw[3]
-                nc0_5, nc1_0, nc2_5, nc4_0, nc10_0 = raw[4], raw[5], raw[6], raw[7], raw[8]
-                typical_size = raw[9]
+                pm1_0 = _extract_val(getattr(raw, "mass_concentration_pm1p0", getattr(raw, "pm1p0", 0.0)))
+                pm2_5 = _extract_val(getattr(raw, "mass_concentration_pm2p5", getattr(raw, "pm2p5", 0.0)))
+                pm4_0 = _extract_val(getattr(raw, "mass_concentration_pm4p0", getattr(raw, "pm4p0", 0.0)))
+                pm10_0 = _extract_val(getattr(raw, "mass_concentration_pm10p0", getattr(raw, "pm10p0", 0.0)))
+                nc0_5 = _extract_val(getattr(raw, "number_concentration_nc0p5", getattr(raw, "nc0p5", 0.0)))
+                nc1_0 = _extract_val(getattr(raw, "number_concentration_nc1p0", getattr(raw, "nc1p0", 0.0)))
+                nc2_5 = _extract_val(getattr(raw, "number_concentration_nc2p5", getattr(raw, "nc2p5", 0.0)))
+                nc4_0 = _extract_val(getattr(raw, "number_concentration_nc4p0", getattr(raw, "nc4p0", 0.0)))
+                nc10_0 = _extract_val(getattr(raw, "number_concentration_nc10p0", getattr(raw, "nc10p0", 0.0)))
+                typical_size = _extract_val(getattr(raw, "typical_particle_size", 0.0))
 
             reading = {
                 "pm1_0": round(float(pm1_0), 2),

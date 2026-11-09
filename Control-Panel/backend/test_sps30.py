@@ -10,6 +10,11 @@ import time
 SERIAL_PORT = "/dev/serial0"
 BAUD_RATE = 115200
 
+def extract_val(item):
+    if hasattr(item, "value"):
+        return float(item.value)
+    return float(item)
+
 def main():
     print("=" * 60)
     print("       Sensirion SPS30 Dust Sensor Standalone Test")
@@ -89,9 +94,18 @@ def main():
         else:
             sensor.start_measurement()
 
-        print("      >>> SENSOR STARTED: Listen/feel for the fan spinning! <<<")
+        print("      >>> SENSOR STARTED: Fan should be spinning now! <<<")
         print("      Waiting 3 seconds for airflow stabilization...")
         time.sleep(3.0)
+
+        # Find the read method
+        read_method_name = None
+        for candidate in ["read_measured_values_float", "read_measured_values", "read_measured_values_ticks"]:
+            if hasattr(sensor, candidate):
+                read_method_name = candidate
+                break
+
+        print(f"      Using read method: sensor.{read_method_name}()")
 
         # 5. Continuous Reading Loop
         print("\n[4/4] Reading live particulate matter data (Press Ctrl+C to stop)...")
@@ -111,20 +125,25 @@ def main():
                     except Exception:
                         ready = True
 
-            if ready:
-                raw = sensor.read_measured_values()
-                if isinstance(raw, (list, tuple)) and len(raw) >= 10:
-                    pm1_0, pm2_5, pm4_0, pm10_0 = raw[0], raw[1], raw[2], raw[3]
-                    typical_size = raw[9]
-                elif hasattr(raw, "pm1p0"):
-                    pm1_0 = raw.pm1p0.value
-                    pm2_5 = raw.pm2p5.value
-                    pm4_0 = raw.pm4p0.value
-                    pm10_0 = raw.pm10p0.value
-                    typical_size = raw.typical_particle_size.value
+            if ready and read_method_name:
+                raw = getattr(sensor, read_method_name)()
+
+                # Debug print for first reading
+                if count == 0:
+                    print(f"      [DEBUG] Raw reading type: {type(raw).__name__}")
+
+                if isinstance(raw, (list, tuple)) and len(raw) >= 4:
+                    pm1_0 = extract_val(raw[0])
+                    pm2_5 = extract_val(raw[1])
+                    pm4_0 = extract_val(raw[2])
+                    pm10_0 = extract_val(raw[3])
+                    typical_size = extract_val(raw[9]) if len(raw) >= 10 else 0.0
                 else:
-                    pm1_0, pm2_5, pm4_0, pm10_0 = raw[0], raw[1], raw[2], raw[3]
-                    typical_size = raw[9]
+                    pm1_0 = extract_val(getattr(raw, "mass_concentration_pm1p0", getattr(raw, "pm1p0", 0.0)))
+                    pm2_5 = extract_val(getattr(raw, "mass_concentration_pm2p5", getattr(raw, "pm2p5", 0.0)))
+                    pm4_0 = extract_val(getattr(raw, "mass_concentration_pm4p0", getattr(raw, "pm4p0", 0.0)))
+                    pm10_0 = extract_val(getattr(raw, "mass_concentration_pm10p0", getattr(raw, "pm10p0", 0.0)))
+                    typical_size = extract_val(getattr(raw, "typical_particle_size", 0.0))
 
                 now = time.strftime("%H:%M:%S")
                 print(f"{now:<10} | {pm1_0:>6.2f}   | {pm2_5:>6.2f}   | {pm4_0:>6.2f}   | {pm10_0:>6.2f}   | ug/m3  (size: {typical_size:.2f} um)")
