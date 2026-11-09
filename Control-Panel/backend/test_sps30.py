@@ -21,7 +21,10 @@ def main():
         from sensirion_shdlc_driver import ShdlcSerialPort
         from sensirion_driver_adapters.shdlc_adapter.shdlc_channel import ShdlcChannel
         from sensirion_uart_sps30.device import Sps30Device
-        from sensirion_uart_sps30.commands import OutputFormat
+        try:
+            from sensirion_uart_sps30.commands import OutputFormat
+        except ImportError:
+            OutputFormat = None
     except ImportError as e:
         print(f"\n[ERROR] Missing required driver dependencies: {e}")
         print("Please run: pip install -r requirement.txt\n")
@@ -51,16 +54,41 @@ def main():
         sys.exit(1)
 
     try:
-        # 3. Read Device Info
-        product_type = sensor.get_product_type()
-        serial_number = sensor.get_serial_number()
-        print(f"[2/4] Device Detected!")
-        print(f"      Product Type  : {product_type}")
-        print(f"      Serial Number : {serial_number}")
+        # 3. Read Device Info safely
+        product_name = "SPS30"
+        serial_number = "Unknown"
+
+        for method in ["get_product_name", "get_product_type", "read_product_type"]:
+            if hasattr(sensor, method):
+                try:
+                    product_name = getattr(sensor, method)()
+                    break
+                except Exception:
+                    pass
+
+        for method in ["get_serial_number", "read_serial_number"]:
+            if hasattr(sensor, method):
+                try:
+                    serial_number = getattr(sensor, method)()
+                    break
+                except Exception:
+                    pass
+
+        print(f"[2/4] Device Connected!")
+        print(f"      Product : {product_name}")
+        print(f"      Serial  : {serial_number}")
+
+        # Print all available driver methods for transparency
+        avail = [m for m in dir(sensor) if not m.startswith("_")]
+        print(f"      Driver Methods: {', '.join(avail)}")
 
         # 4. Start Measurement
         print("\n[3/4] Starting measurement (fan and laser on)...")
-        sensor.start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)
+        if OutputFormat and hasattr(OutputFormat, "OUTPUT_FORMAT_FLOAT"):
+            sensor.start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)
+        else:
+            sensor.start_measurement()
+
         print("      >>> SENSOR STARTED: Listen/feel for the fan spinning! <<<")
         print("      Waiting 3 seconds for airflow stabilization...")
         time.sleep(3.0)
@@ -75,16 +103,13 @@ def main():
         while True:
             # Check data ready flag if available
             ready = True
-            if hasattr(sensor, "read_data_ready_flag"):
-                try:
-                    ready = sensor.read_data_ready_flag()
-                except Exception:
-                    ready = True
-            elif hasattr(sensor, "get_data_ready_flag"):
-                try:
-                    ready = sensor.get_data_ready_flag()
-                except Exception:
-                    ready = True
+            for flag_method in ["read_data_ready_flag", "get_data_ready_flag"]:
+                if hasattr(sensor, flag_method):
+                    try:
+                        ready = getattr(sensor, flag_method)()
+                        break
+                    except Exception:
+                        ready = True
 
             if ready:
                 raw = sensor.read_measured_values()

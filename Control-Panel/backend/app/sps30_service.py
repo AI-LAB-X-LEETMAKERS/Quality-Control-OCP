@@ -66,10 +66,27 @@ class SPS30Service:
                 except Exception as reset_err:
                     sys.stdout.write(f"[SPS30] Reset warning: {reset_err}\n")
 
-            serial_num = self.device.get_serial_number()
-            product_type = self.device.get_product_type()
+            product_name = "SPS30"
+            serial_num = "Unknown"
+
+            for method in ["get_product_name", "get_product_type", "read_product_type"]:
+                if hasattr(self.device, method):
+                    try:
+                        product_name = getattr(self.device, method)()
+                        break
+                    except Exception:
+                        pass
+
+            for method in ["get_serial_number", "read_serial_number"]:
+                if hasattr(self.device, method):
+                    try:
+                        serial_num = getattr(self.device, method)()
+                        break
+                    except Exception:
+                        pass
+
             sys.stdout.write(
-                f"[SPS30] Connected on {self.port_path} | Product: {product_type} | Serial: {serial_num}\n"
+                f"[SPS30] Connected on {self.port_path} | Product: {product_name} | Serial: {serial_num}\n"
             )
             sys.stdout.flush()
         except Exception as err:
@@ -178,7 +195,7 @@ class SPS30Service:
                 except Exception:
                     pass
 
-            raw = self.device.read_measured_values()
+            raw = self.device.read_measurement_values_float()
 
             # Handle unpacked tuple/list or object format
             if isinstance(raw, (list, tuple)) and len(raw) >= 10:
