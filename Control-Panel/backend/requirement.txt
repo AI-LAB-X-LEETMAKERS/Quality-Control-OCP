@@ -8,8 +8,4 @@ websockets>=14.2
 
 # Dust sensor dependancies
 
-sps30
-sensirion-i2c-sps30
-sensirion-i2c-driver
-sensirion-driver-support-types
-sensirion-driver-adapters
+sensirion-uart-sps30>=1.0.0

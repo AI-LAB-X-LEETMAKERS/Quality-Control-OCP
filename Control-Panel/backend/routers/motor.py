@@ -67,8 +67,8 @@ async def control_port(data: Motor):
         )
         
         async with serial_lock:
-            await serial.write_async(request.encode())
-        return {"current": 30}
+            await serial.write_async(request.encode()) 
+        return {"status": "up"}
     except HTTPException:
         raise Internal_error
     except Exception as e:
@@ -111,8 +111,8 @@ async def control_vibrator(data: Motor):
         )
         
         async with serial_lock:
-            await serial.write_async(request.encode())
-        return {"current": 30}
+            await serial.write_async(request.encode()) 
+        return {"status": "up"}
     except HTTPException:
         raise Internal_error
     except Exception as e:

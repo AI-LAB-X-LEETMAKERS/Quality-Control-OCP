@@ -11,5 +11,5 @@ async def websocket_endpoit(websocket: WebSocket):
     await websocket.accept()
     while True:
         async with serial_lock:
-            command= await serial.readline_async()
+            command = await serial.readline_async()
             await websocket.send_text(command.decode())
