@@ -9,7 +9,7 @@ Overview of the FastAPI backend application for the Quality Control OCP machine 
 The backend is built with **FastAPI** and orchestrates asynchronous communication between:
 - **Web UI & Clients** (via REST and WebSockets)
 - **ESP32 Microcontroller** over USB Serial (`/dev/ttyACM0` at `115200` baud)
-- **Sensirion SPS30 Dust Sensor** over UART/SHDLC (`/dev/ttyUSB0` at `115200` baud)
+- **Sensirion SPS30 Dust Sensor** over UART/SHDLC (`/dev/serial0` at `115200` baud)
 
 ---
 
@@ -40,7 +40,7 @@ Provides an asynchronous `aioserial.AioSerial` connection on `/dev/ttyACM0` at `
 *Note: If the ESP32 is not connected, the application terminates immediately with an error.*
 
 ### Sensirion SPS30 Dust Sensor (`app/sps30_service.py`)
-Communicates directly with the Sensirion SPS30 particulate matter sensor over UART via SHDLC protocol on `/dev/ttyUSB0` at `115200` baud (`sensirion-uart-sps30`).
+Communicates directly with the Sensirion SPS30 particulate matter sensor over UART via SHDLC protocol on `/dev/serial0` at `115200` baud (`sensirion-uart-sps30`).
 - Runs synchronous sensor queries in a non-blocking background thread.
 - Automatically begins acquiring data when the machine is turned on (`/on`).
 - Stops laser/fan when machine is turned off (`/off`).

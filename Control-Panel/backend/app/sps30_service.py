@@ -4,7 +4,7 @@ import asyncio
 from typing import Callable, Coroutine, Any
 from app.state import status_machine
 
-PORT = "/dev/ttyUSB0"
+PORT = "/dev/serial0"
 BAUDRATE = 115200
 
 try:
