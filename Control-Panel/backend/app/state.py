@@ -14,7 +14,7 @@ class Stats(Enum):
     FAILED = "FAILED"
 
 class Motor(BaseModel):
-    name : str | None = ""
+    name: str | None = ""
     speed: int | None = 0
     direction: Direction | None = Direction.RIGHT
     angle: int | None = 0
@@ -24,7 +24,18 @@ class WeightSensor(BaseModel):
     current: float | None = 0.0
 
 class DustSensor(BaseModel):
-    value : float | None = 0
+    pm1_0: float = 0.0
+    pm2_5: float = 0.0
+    pm4_0: float = 0.0
+    pm10_0: float = 0.0
+    nc0_5: float = 0.0
+    nc1_0: float = 0.0
+    nc2_5: float = 0.0
+    nc4_0: float = 0.0
+    nc10_0: float = 0.0
+    typical_particle_size: float = 0.0
+    status: str = "IDLE"
+    value: float | None = 0.0
     current: float | None = 0.0
 
 class RPM(BaseModel):
@@ -36,7 +47,7 @@ class StatMachine(BaseModel):
     vibrator: Motor = Field(default_factory=Motor)
     port: Motor = Field(default_factory=Motor)
     weight: WeightSensor = Field(default_factory=WeightSensor)
+    dust: DustSensor = Field(default_factory=DustSensor)
     rpm: RPM = Field(default_factory=RPM)
 
 status_machine = StatMachine()
-
