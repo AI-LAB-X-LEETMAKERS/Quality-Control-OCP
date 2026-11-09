@@ -11,6 +11,10 @@ try:
     from sensirion_shdlc_driver import ShdlcSerialPort
     from sensirion_driver_adapters.shdlc_adapter.shdlc_channel import ShdlcChannel
     from sensirion_uart_sps30.device import Sps30Device
+    try:
+        from sensirion_uart_sps30.commands import OutputFormat
+    except ImportError:
+        OutputFormat = None
 except ImportError as e:
     sys.stderr.write(
         f"\n[FATAL ERROR] Sensirion SPS30 driver dependencies not installed: {e}\n"
@@ -53,6 +57,15 @@ class SPS30Service:
             self.port = ShdlcSerialPort(port=self.port_path, baudrate=self.baudrate)
             self.channel = ShdlcChannel(self.port)
             self.device = Sps30Device(self.channel)
+
+            # Optional device reset to clear any stuck state
+            if hasattr(self.device, "device_reset"):
+                try:
+                    self.device.device_reset()
+                    time.sleep(1.0)
+                except Exception as reset_err:
+                    sys.stdout.write(f"[SPS30] Reset warning: {reset_err}\n")
+
             serial_num = self.device.get_serial_number()
             product_type = self.device.get_product_type()
             sys.stdout.write(
@@ -92,12 +105,30 @@ class SPS30Service:
                 pass
         self._close_hardware()
 
+    def _call_device_start_measurement(self):
+        """Invoke driver start_measurement with float output format."""
+        if not self.device:
+            return
+        try:
+            if OutputFormat and hasattr(OutputFormat, "OUTPUT_FORMAT_FLOAT"):
+                sys.stdout.write("[SPS30] Sending start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)...\n")
+                self.device.start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)
+            else:
+                sys.stdout.write("[SPS30] Sending start_measurement()...\n")
+                self.device.start_measurement()
+            sys.stdout.write("[SPS30] Measurement command acknowledged. Fan spinning up.\n")
+            sys.stdout.flush()
+        except Exception as e:
+            sys.stderr.write(f"[ERROR] Failed to start SPS30 measurement: {e}\n")
+            sys.stderr.flush()
+            raise
+
     async def start_measurement(self):
         """Start sensor laser/fan and enable data acquisition."""
         async with self._lock:
             if not self.is_measuring:
                 if self.device:
-                    await asyncio.to_thread(self.device.start_measurement)
+                    await asyncio.to_thread(self._call_device_start_measurement)
                 self.is_measuring = True
                 self.latest_data["status"] = "MEASURING"
                 status_machine.dust.status = "MEASURING"
@@ -109,6 +140,8 @@ class SPS30Service:
                 if self.device:
                     try:
                         await asyncio.to_thread(self.device.stop_measurement)
+                        sys.stdout.write("[SPS30] Measurement stopped. Fan spinning down.\n")
+                        sys.stdout.flush()
                     except Exception as err:
                         sys.stderr.write(f"[WARN] Error stopping SPS30 measurement: {err}\n")
                 self.is_measuring = False
@@ -132,8 +165,18 @@ class SPS30Service:
             return None
         try:
             # Check data ready flag if supported
-            if hasattr(self.device, "get_data_ready_flag") and not self.device.get_data_ready_flag():
-                return None
+            if hasattr(self.device, "read_data_ready_flag"):
+                try:
+                    if not self.device.read_data_ready_flag():
+                        return None
+                except Exception:
+                    pass
+            elif hasattr(self.device, "get_data_ready_flag"):
+                try:
+                    if not self.device.get_data_ready_flag():
+                        return None
+                except Exception:
+                    pass
 
             raw = self.device.read_measured_values()
 
@@ -156,7 +199,7 @@ class SPS30Service:
                 nc0_5, nc1_0, nc2_5, nc4_0, nc10_0 = raw[4], raw[5], raw[6], raw[7], raw[8]
                 typical_size = raw[9]
 
-            return {
+            reading = {
                 "pm1_0": round(float(pm1_0), 2),
                 "pm2_5": round(float(pm2_5), 2),
                 "pm4_0": round(float(pm4_0), 2),
@@ -170,6 +213,7 @@ class SPS30Service:
                 "status": "MEASURING",
                 "timestamp": round(time.time(), 2),
             }
+            return reading
         except Exception as err:
             sys.stderr.write(f"[ERROR] Error reading SPS30 values: {err}\n")
             return None
