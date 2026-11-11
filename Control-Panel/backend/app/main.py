@@ -4,11 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 # from routers.motor import MotorRoute
+from app.sps30_service import DustDevice
 from routers.dustsensor import DustRouter
 from routers.ws import ws
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    await DustDevice.stop()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

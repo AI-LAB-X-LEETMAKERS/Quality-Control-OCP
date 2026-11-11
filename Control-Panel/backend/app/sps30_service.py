@@ -66,9 +66,9 @@ class Sps30:
                 pm10_0=pm10_0,
                 size=typical_size,
             )
-            
-
-    mesuare = measure
-
+    async def stop(self):
+        if self.device is not None and self.is_measuring:
+            await asyncio.to_thread(self.device.stop_measurement)
+            self.is_measuring = False
 
 DustDevice = Sps30(port="/dev/serial0", baudrate=115200)
