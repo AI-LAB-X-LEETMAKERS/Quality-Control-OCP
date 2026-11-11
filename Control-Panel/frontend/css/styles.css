@@ -449,27 +449,22 @@ select.input-field {
 
 /* Dust Sensor Gauge Card */
 .dust-gauge-wrapper {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .dust-gauge-svg {
   width: 100%;
-  max-width: 220px;
+  max-width: 230px;
   height: auto;
   overflow: visible;
 }
 
 .dust-gauge-fill {
-  transition: stroke-dashoffset 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dust-gauge-needle {
-  transform-origin: 110px 105px;
-  transform: rotate(-90deg);
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .dust-gauge-scale-label {
@@ -482,7 +477,7 @@ select.input-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: -6px;
+  margin-top: -42px;
 }
 
 .dust-gauge-metric {
@@ -500,7 +495,7 @@ select.input-field {
 }
 
 .dust-gauge-value {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--primary-green);
   line-height: 1.2;
@@ -508,32 +503,6 @@ select.input-field {
 
 .dust-gauge-unit {
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.dust-reading-box {
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  padding: 8px 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.dust-reading-box .field-label {
-  margin-bottom: 0;
-}
-
-.dust-reading-val {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.dust-reading-val small {
-  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
 }

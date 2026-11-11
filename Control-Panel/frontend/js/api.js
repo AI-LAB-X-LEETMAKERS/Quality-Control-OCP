@@ -1,4 +1,4 @@
-import { API_BASE_URL, WS_BASE_URL, ENDPOINTS } from "./config.js";
+import { API_BASE_URL, WS_BASE_URL, ENDPOINTS } from "./config.js?v=2";
 
 async function request(path, options = {}) {
   const hasBody = options.body !== undefined && options.body !== null;

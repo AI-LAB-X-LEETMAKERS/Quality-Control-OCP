@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCP Quality Control Interface</title>
-    <link rel="stylesheet" href="./css/styles.css">
+    <link rel="stylesheet" href="./css/styles.css?v=2">
 </head>
 <body>
 
@@ -124,7 +124,7 @@
                                 d="M 30 105 A 80 80 0 0 1 190 105"
                                 fill="none"
                                 stroke="#e2e8f0"
-                                stroke-width="14"
+                                stroke-width="16"
                                 stroke-linecap="round"
                             />
                             <!-- Active Fill Arc -->
@@ -134,19 +134,14 @@
                                 d="M 30 105 A 80 80 0 0 1 190 105"
                                 fill="none"
                                 stroke="url(#dustGaugeGradient)"
-                                stroke-width="14"
+                                stroke-width="16"
                                 stroke-linecap="round"
                                 stroke-dasharray="251.33"
                                 stroke-dashoffset="251.33"
                             />
-                            <!-- Gauge Needle -->
-                            <g id="dust-gauge-needle" class="dust-gauge-needle">
-                                <line x1="110" y1="105" x2="110" y2="38" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" />
-                                <circle cx="110" cy="105" r="5" fill="#0f172a" />
-                            </g>
                             <!-- Min / Max Range Labels -->
-                            <text x="16" y="124" class="dust-gauge-scale-label">1 µg/m³</text>
-                            <text x="160" y="124" class="dust-gauge-scale-label">1000 µg/m³</text>
+                            <text x="16" y="126" class="dust-gauge-scale-label">1 µg/m³</text>
+                            <text x="158" y="126" class="dust-gauge-scale-label">1000 µg/m³</text>
                         </svg>
 
                         <div class="dust-gauge-readout">
@@ -158,34 +153,9 @@
                         </div>
                     </div>
 
-                    <!-- Live Readings Breakdown -->
-                    <div class="form-grid dust-readings-grid">
-                        <div class="dust-reading-box">
-                            <span class="field-label">PM1.0</span>
-                            <div class="dust-reading-val"><span id="dust-pm1-0">--</span> <small>µg/m³</small></div>
-                        </div>
-                        <div class="dust-reading-box">
-                            <span class="field-label">PM2.5</span>
-                            <div class="dust-reading-val"><span id="dust-pm2-5">--</span> <small>µg/m³</small></div>
-                        </div>
-                        <div class="dust-reading-box">
-                            <span class="field-label">PM4.0</span>
-                            <div class="dust-reading-val"><span id="dust-pm4-0">--</span> <small>µg/m³</small></div>
-                        </div>
-                        <div class="dust-reading-box">
-                            <span class="field-label">PM10.0</span>
-                            <div class="dust-reading-val"><span id="dust-pm10-0">--</span> <small>µg/m³</small></div>
-                        </div>
-                        <div class="dust-reading-box form-group-full">
-                            <span class="field-label">Particle Size</span>
-                            <div class="dust-reading-val"><span id="dust-size">--</span></div>
-                        </div>
-                        <div class="form-group-full">
-                            <button type="button" id="btn-dust-sensor" class="btn dust-toggle-btn" style="width: 100%; margin-top: 8px;">
-                                Start Sensor
-                            </button>
-                        </div>
-                    </div>
+                    <button type="button" id="btn-dust-sensor" class="btn dust-toggle-btn" style="width: 100%; margin-top: 8px;">
+                        Start Sensor
+                    </button>
                 </div>
 
                 <!-- Port Postcard -->
@@ -357,6 +327,6 @@
         </div>
     </div>
 
-    <script type="module" src="./js/app.js"></script>
+    <script type="module" src="./js/app.js?v=2"></script>
 </body>
 </html>
