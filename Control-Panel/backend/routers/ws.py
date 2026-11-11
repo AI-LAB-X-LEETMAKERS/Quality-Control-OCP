@@ -16,9 +16,10 @@ async def websocket_dust(websocket: WebSocket):
             await websocket.send_json(dict(dust))
             await asyncio.sleep(1.0)
     except WebSocketDisconnect:
-        pass
+                await websocket.close(code = 0, reason="client disconnected gracefully")
     except Exception:
-        pass
+        print("Dust sensor failed", flush=True)
+        await websocket.close(code = 1011, reason="dust sensor failed")
 
 # @ws.websocket("/ws")
 # async def websocket_endpoint(websocket: WebSocket):
