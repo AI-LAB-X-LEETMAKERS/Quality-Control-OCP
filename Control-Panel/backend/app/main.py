@@ -5,7 +5,7 @@ import uvicorn
 
 # from routers.motor import MotorRoute
 from routers.dustsensor import DustRouter
-# from routers.ws import ws
+from routers.ws import ws
 
 
 app = FastAPI()
@@ -23,7 +23,7 @@ def stattus():
     return {"status" : "alive"}
 
 
-routers = [DustRouter]
+routers = [DustRouter, ws]
 
 for router in routers:
     app.include_router(router)
