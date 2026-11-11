@@ -18,4 +18,6 @@ async def update_dust():
     except Exception as e:
         print(f"Unexpected error occurred: {e}")
         raise Internal_error
+    finally:
+        await DustDevice.stop()
 

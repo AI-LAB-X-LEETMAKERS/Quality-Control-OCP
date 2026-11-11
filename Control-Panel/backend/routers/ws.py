@@ -1,5 +1,6 @@
 import asyncio
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter
+from fastapi.websockets import WebSocketState
 from app.sps30_service import DustDevice
 from app.models import DustSensor
 # from app.serial_handler import serial_lock
@@ -16,10 +17,13 @@ async def websocket_dust(websocket: WebSocket):
             await websocket.send_json(dict(dust))
             await asyncio.sleep(1.0)
     except WebSocketDisconnect:
-                await websocket.close(code = 0, reason="client disconnected gracefully")
+        pass
     except Exception:
         print("Dust sensor failed", flush=True)
-        await websocket.close(code = 1011, reason="dust sensor failed")
+        if websocket.client_state == WebSocketState.CONNECTED:
+            await websocket.close(code = 1011, reason="dust sensor failed")
+    finally:
+        await DustDevice.stop()
 
 # @ws.websocket("/ws")
 # async def websocket_endpoint(websocket: WebSocket):
