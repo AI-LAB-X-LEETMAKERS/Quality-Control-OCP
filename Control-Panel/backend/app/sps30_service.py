@@ -53,18 +53,13 @@ class Sps30:
                 await asyncio.sleep(1.0)
 
             values = await asyncio.to_thread(self.device.read_measurement_values_float)
-            pm1_0 =  values[0]
-            pm2_5 =  values[1]
-            pm4_0 = values[2]
-            pm10_0 =  values[3]
-            typical_size = values[9]
-    
+                
             return DustSensor(
-                pm1_0=pm1_0,
-                pm2_5=pm2_5,
-                pm4_0=pm4_0,
-                pm10_0=pm10_0,
-                size=typical_size,
+                pm1_0=int(values[0]),
+                pm2_5=int(values[1]),
+                pm4_0=int(values[2]),
+                pm10_0=int(values[3]),
+                size=int(values[9]),
             )
     async def stop(self):
         if self.device is not None and self.is_measuring:

@@ -12,8 +12,10 @@ async def update_dust():
     try:
         dust: DustSensor = await DustDevice.measure()
         return dust
-    except HTTPException:
-        raise
-    except Exception:
+    except HTTPException as e:
+        print(f"HTTP error occurred: {e}")
+        raise e
+    except Exception as e:
+        print(f"Unexpected error occurred: {e}")
         raise Internal_error
 
