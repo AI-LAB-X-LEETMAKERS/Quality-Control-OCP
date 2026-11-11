@@ -60,11 +60,11 @@ class Sps30:
             typical_size = getattr(values[9], "value", values[9])
     
             return DustSensor(
-                pm1_0=round(float(pm1_0), 2),
-                pm2_5=round(float(pm2_5), 2),
-                pm4_0=round(float(pm4_0), 2),
-                pm10_0=round(float(pm10_0), 2),
-                size=round(float(typical_size), 2),
+                pm1_0=pm1_0,
+                pm2_5=pm2_5,
+                pm4_0=pm4_0,
+                pm10_0=pm10_0,
+                size=typical_size,
             )
             
 

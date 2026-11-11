@@ -24,11 +24,11 @@ class WeightSensor(BaseModel):
     current: float | None = 0.0
 
 class DustSensor(BaseModel):
-    pm1_0: float = 0.0
-    pm2_5: float = 0.0
-    pm4_0: float = 0.0
-    pm10_0: float = 0.0
-    size: float = 0.0
+    pm1_0: int = 0
+    pm2_5: int  = 0
+    pm4_0: int  = 0
+    pm10_0: int = 0
+    size: int   = 0
 
 class RPM(BaseModel):
     value: int | None = 0
