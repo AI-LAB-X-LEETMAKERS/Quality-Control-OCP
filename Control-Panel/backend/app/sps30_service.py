@@ -53,11 +53,11 @@ class Sps30:
                 await asyncio.sleep(1.0)
 
             values = await asyncio.to_thread(self.device.read_measurement_values_float)
-            pm1_0 = getattr(values[0], "value", values[0])
-            pm2_5 = getattr(values[1], "value", values[1])
-            pm4_0 = getattr(values[2], "value", values[2])
-            pm10_0 = getattr(values[3], "value", values[3])
-            typical_size = getattr(values[9], "value", values[9])
+            pm1_0 =  values[0]
+            pm2_5 =  values[1]
+            pm4_0 = values[2]
+            pm10_0 =  values[3]
+            typical_size = values[9]
     
             return DustSensor(
                 pm1_0=pm1_0,
