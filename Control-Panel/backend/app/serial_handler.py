@@ -5,8 +5,8 @@ try:
     import aioserial
 except ImportError as e:
     sys.stderr.write(
-        f"\n[FATAL ERROR] Missing dependency 'aioserial': {e}\n"
-        "Please run 'pip install -r requirement.txt'.\n\n"
+        f"\n Missing dependency 'aioserial': {e}\n"
+        "make build'.\n\n"
     )
     sys.stderr.flush()
     sys.exit(1)
@@ -18,9 +18,8 @@ try:
     serial = aioserial.AioSerial(port=PORT, baudrate=BAUDRATE)
 except Exception as err:
     sys.stderr.write(
-        f"\n[FATAL ERROR] ESP32 connection failed on {PORT} at {BAUDRATE} baud.\n"
+        f"\n ESP32 connection failed on {PORT} at {BAUDRATE} baud.\n"
         f"Details: {err}\n"
-        f"Exiting because ESP32 hardware is required.\n\n"
     )
     sys.stderr.flush()
     sys.exit(1)

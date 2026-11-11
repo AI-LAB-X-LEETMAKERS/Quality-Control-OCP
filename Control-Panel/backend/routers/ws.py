@@ -1,7 +1,7 @@
 import asyncio
 from fastapi import WebSocket, WebSocketDisconnect, APIRouter
 from app.serial_handler import serial, serial_lock
-from app.sps30_service import sps30_service
+from app.sps30_service import DustDevice
 
 ws = APIRouter(tags=["websocket"])
 

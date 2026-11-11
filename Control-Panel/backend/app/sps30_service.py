@@ -1,8 +1,9 @@
 import sys
 import time
 import asyncio
-from typing import Callable, Coroutine, Any
 from app.state import status_machine
+from app.serial_handler import serial_lock
+from app.state import DustSensor
 
 PORT = "/dev/serial0"
 BAUDRATE = 115200
@@ -11,296 +12,65 @@ try:
     from sensirion_shdlc_driver import ShdlcSerialPort
     from sensirion_driver_adapters.shdlc_adapter.shdlc_channel import ShdlcChannel
     from sensirion_uart_sps30.device import Sps30Device
-    try:
-        from sensirion_uart_sps30.commands import OutputFormat
-    except ImportError:
-        OutputFormat = None
+    from sensirion_uart_sps30.commands import OutputFormat
+
 except ImportError as e:
     sys.stderr.write(
-        f"\n[FATAL ERROR] Sensirion SPS30 driver dependencies not installed: {e}\n"
-        "Please run 'pip install -r requirement.txt'.\n\n"
+        f"\nSPS30 driver dependencies not installed: {e}\n"
+        "Please run 'make build'.\n\n"
     )
     sys.stderr.flush()
     sys.exit(1)
 
 
-def _extract_val(item):
-    if hasattr(item, "value"):
-        return float(item.value)
-    return float(item)
-
-
-class SPS30Service:
+class Sps30:
     def __init__(self, port: str = PORT, baudrate: int = BAUDRATE):
         self.port_path = port
         self.baudrate = baudrate
         self.port: ShdlcSerialPort | None = None
         self.channel: ShdlcChannel | None = None
-        self.device: Sps30Device | None = None
+        self.device: Sps30Device = None 
         self.is_measuring = False
-        self._worker_task: asyncio.Task | None = None
-        self._listeners: list[Callable[[dict], Coroutine[Any, Any, None]]] = []
-        self._lock = asyncio.Lock()
 
-        self.latest_data: dict = {
-            "pm1_0": 0.0,
-            "pm2_5": 0.0,
-            "pm4_0": 0.0,
-            "pm10_0": 0.0,
-            "nc0_5": 0.0,
-            "nc1_0": 0.0,
-            "nc2_5": 0.0,
-            "nc4_0": 0.0,
-            "nc10_0": 0.0,
-            "typical_particle_size": 0.0,
-            "status": "IDLE",
-            "timestamp": time.time(),
-        }
-
-    def init_hardware(self):
-        """Initialize connection to physical SPS30 sensor via SHDLC channel. Exits on failure."""
-        try:
-            self.port = ShdlcSerialPort(port=self.port_path, baudrate=self.baudrate)
-            self.channel = ShdlcChannel(self.port)
-            self.device = Sps30Device(self.channel)
-
-            # Optional device reset to clear any stuck state
-            if hasattr(self.device, "device_reset"):
+    async def measure(self) -> DustSensor:
+        async with serial_lock:
+            if self.device is None:
                 try:
-                    self.device.device_reset()
-                    time.sleep(1.0)
-                except Exception as reset_err:
-                    sys.stdout.write(f"[SPS30] Reset warning: {reset_err}\n")
+                    self.port = ShdlcSerialPort(port=self.port_path, baudrate=self.baudrate)
+                    self.channel = ShdlcChannel(self.port)
+                    self.device = Sps30Device(self.channel)
+                except Exception as err:
+                    sys.stderr.write(
+                        f"\nSPS30 connection failed on {self.port_path} at {self.baudrate} baud.\n"
+                        f"Details: {err}\n"
+                    )
+                    sys.stderr.flush()
+                    sys.exit(1)
 
-            product_name = "SPS30"
-            serial_num = "Unknown"
-
-            for method in ["get_product_name", "get_product_type", "read_product_type"]:
-                if hasattr(self.device, method):
-                    try:
-                        product_name = getattr(self.device, method)()
-                        break
-                    except Exception:
-                        pass
-
-            for method in ["get_serial_number", "read_serial_number"]:
-                if hasattr(self.device, method):
-                    try:
-                        serial_num = getattr(self.device, method)()
-                        break
-                    except Exception:
-                        pass
-
-            sys.stdout.write(
-                f"[SPS30] Connected on {self.port_path} | Product: {product_name} | Serial: {serial_num}\n"
-            )
-            sys.stdout.flush()
-        except Exception as err:
-            sys.stderr.write(
-                f"\n[FATAL ERROR] SPS30 connection failed on {self.port_path} at {self.baudrate} baud.\n"
-                f"Details: {err}\n"
-                f"Exiting because physical SPS30 sensor is required.\n\n"
-            )
-            sys.stderr.flush()
-            sys.exit(1)
-
-    def register_listener(self, callback: Callable[[dict], Coroutine[Any, Any, None]]):
-        if callback not in self._listeners:
-            self._listeners.append(callback)
-
-    def unregister_listener(self, callback: Callable[[dict], Coroutine[Any, Any, None]]):
-        if callback in self._listeners:
-            self._listeners.remove(callback)
-
-    async def start_service(self):
-        """Start SPS30 background polling task."""
-        if self._worker_task is None or self._worker_task.done():
-            self._worker_task = asyncio.create_task(self._poll_loop())
-
-    async def stop_service(self):
-        """Stop measurement and cancel background polling task."""
-        await self.stop_measurement()
-        if self._worker_task and not self._worker_task.done():
-            self._worker_task.cancel()
-            try:
-                await self._worker_task
-            except asyncio.CancelledError:
-                pass
-        self._close_hardware()
-
-    def _call_device_start_measurement(self):
-        """Invoke driver start_measurement with float output format."""
-        if not self.device:
-            return
-        try:
-            if OutputFormat and hasattr(OutputFormat, "OUTPUT_FORMAT_FLOAT"):
-                sys.stdout.write("[SPS30] Sending start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)...\n")
-                self.device.start_measurement(OutputFormat.OUTPUT_FORMAT_FLOAT)
-            else:
-                sys.stdout.write("[SPS30] Sending start_measurement()...\n")
-                self.device.start_measurement()
-            sys.stdout.write("[SPS30] Measurement command acknowledged. Fan spinning up.\n")
-            sys.stdout.flush()
-        except Exception as e:
-            sys.stderr.write(f"[ERROR] Failed to start SPS30 measurement: {e}\n")
-            sys.stderr.flush()
-            raise
-
-    async def start_measurement(self):
-        """Start sensor laser/fan and enable data acquisition."""
-        async with self._lock:
             if not self.is_measuring:
-                if self.device:
-                    await asyncio.to_thread(self._call_device_start_measurement)
+                await asyncio.to_thread(
+                    self.device.start_measurement, OutputFormat.OUTPUT_FORMAT_FLOAT
+                )
                 self.is_measuring = True
-                self.latest_data["status"] = "MEASURING"
-                status_machine.dust.status = "MEASURING"
-
-    async def stop_measurement(self):
-        """Stop sensor laser/fan and pause data acquisition."""
-        async with self._lock:
-            if self.is_measuring:
-                if self.device:
-                    try:
-                        await asyncio.to_thread(self.device.stop_measurement)
-                        sys.stdout.write("[SPS30] Measurement stopped. Fan spinning down.\n")
-                        sys.stdout.flush()
-                    except Exception as err:
-                        sys.stderr.write(f"[WARN] Error stopping SPS30 measurement: {err}\n")
-                self.is_measuring = False
-                self.latest_data["status"] = "IDLE"
-                status_machine.dust.status = "IDLE"
-
-    def _close_hardware(self):
-        """Close serial port handle and adapters."""
-        if self.port:
-            try:
-                self.port.close()
-            except Exception:
-                pass
-            self.port = None
-            self.channel = None
-            self.device = None
-
-    def _read_sensor_blocking(self) -> dict | None:
-        """Synchronously query the SPS30 for measurement data."""
-        if not self.device or not self.is_measuring:
-            return None
-        try:
-            # Check data ready flag if supported
-            if hasattr(self.device, "read_data_ready_flag"):
-                try:
-                    if not self.device.read_data_ready_flag():
-                        return None
-                except Exception:
-                    pass
-            elif hasattr(self.device, "get_data_ready_flag"):
-                try:
-                    if not self.device.get_data_ready_flag():
-                        return None
-                except Exception:
-                    pass
-
-            raw = None
-            for candidate in ["read_measured_values_float", "read_measured_values", "read_measured_values_ticks"]:
-                if hasattr(self.device, candidate):
-                    try:
-                        raw = getattr(self.device, candidate)()
-                        break
-                    except Exception:
-                        pass
-
-            if raw is None:
-                return None
-
-            # Handle unpacked tuple/list or object format
-            if isinstance(raw, (list, tuple)) and len(raw) >= 4:
-                pm1_0 = _extract_val(raw[0])
-                pm2_5 = _extract_val(raw[1])
-                pm4_0 = _extract_val(raw[2])
-                pm10_0 = _extract_val(raw[3])
-                nc0_5 = _extract_val(raw[4]) if len(raw) >= 5 else 0.0
-                nc1_0 = _extract_val(raw[5]) if len(raw) >= 6 else 0.0
-                nc2_5 = _extract_val(raw[6]) if len(raw) >= 7 else 0.0
-                nc4_0 = _extract_val(raw[7]) if len(raw) >= 8 else 0.0
-                nc10_0 = _extract_val(raw[8]) if len(raw) >= 9 else 0.0
-                typical_size = _extract_val(raw[9]) if len(raw) >= 10 else 0.0
-            else:
-                pm1_0 = _extract_val(getattr(raw, "mass_concentration_pm1p0", getattr(raw, "pm1p0", 0.0)))
-                pm2_5 = _extract_val(getattr(raw, "mass_concentration_pm2p5", getattr(raw, "pm2p5", 0.0)))
-                pm4_0 = _extract_val(getattr(raw, "mass_concentration_pm4p0", getattr(raw, "pm4p0", 0.0)))
-                pm10_0 = _extract_val(getattr(raw, "mass_concentration_pm10p0", getattr(raw, "pm10p0", 0.0)))
-                nc0_5 = _extract_val(getattr(raw, "number_concentration_nc0p5", getattr(raw, "nc0p5", 0.0)))
-                nc1_0 = _extract_val(getattr(raw, "number_concentration_nc1p0", getattr(raw, "nc1p0", 0.0)))
-                nc2_5 = _extract_val(getattr(raw, "number_concentration_nc2p5", getattr(raw, "nc2p5", 0.0)))
-                nc4_0 = _extract_val(getattr(raw, "number_concentration_nc4p0", getattr(raw, "nc4p0", 0.0)))
-                nc10_0 = _extract_val(getattr(raw, "number_concentration_nc10p0", getattr(raw, "nc10p0", 0.0)))
-                typical_size = _extract_val(getattr(raw, "typical_particle_size", 0.0))
-
-            reading = {
-                "pm1_0": round(float(pm1_0), 2),
-                "pm2_5": round(float(pm2_5), 2),
-                "pm4_0": round(float(pm4_0), 2),
-                "pm10_0": round(float(pm10_0), 2),
-                "nc0_5": round(float(nc0_5), 2),
-                "nc1_0": round(float(nc1_0), 2),
-                "nc2_5": round(float(nc2_5), 2),
-                "nc4_0": round(float(nc4_0), 2),
-                "nc10_0": round(float(nc10_0), 2),
-                "typical_particle_size": round(float(typical_size), 2),
-                "status": "MEASURING",
-                "timestamp": round(time.time(), 2),
-            }
-            return reading
-        except Exception as err:
-            sys.stderr.write(f"[ERROR] Error reading SPS30 values: {err}\n")
-            return None
-
-    async def _poll_loop(self):
-        """Background loop reading SPS30 at 1 Hz when measuring."""
-        while True:
-            try:
-                if self.is_measuring:
-                    reading = await asyncio.to_thread(self._read_sensor_blocking)
-                    if reading:
-                        self.latest_data = reading
-                        # Update shared state machine
-                        status_machine.dust.pm1_0 = reading["pm1_0"]
-                        status_machine.dust.pm2_5 = reading["pm2_5"]
-                        status_machine.dust.pm4_0 = reading["pm4_0"]
-                        status_machine.dust.pm10_0 = reading["pm10_0"]
-                        status_machine.dust.nc0_5 = reading["nc0_5"]
-                        status_machine.dust.nc1_0 = reading["nc1_0"]
-                        status_machine.dust.nc2_5 = reading["nc2_5"]
-                        status_machine.dust.nc4_0 = reading["nc4_0"]
-                        status_machine.dust.nc10_0 = reading["nc10_0"]
-                        status_machine.dust.typical_particle_size = reading["typical_particle_size"]
-                        status_machine.dust.value = reading["pm2_5"]
-                        status_machine.dust.status = "MEASURING"
-
-                        # Broadcast to all registered WebSocket listeners
-                        for listener in list(self._listeners):
-                            try:
-                                await listener(reading)
-                            except Exception:
-                                pass
-                await asyncio.sleep(1.0)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                sys.stderr.write(f"[ERROR] Uncaught in SPS30 loop: {e}\n")
                 await asyncio.sleep(1.0)
 
-    def get_latest_reading(self) -> dict:
-        return self.latest_data
+            values = await asyncio.to_thread(self.device.read_measurement_values_float)
+            pm1_0 = getattr(values[0], "value", values[0])
+            pm2_5 = getattr(values[1], "value", values[1])
+            pm4_0 = getattr(values[2], "value", values[2])
+            pm10_0 = getattr(values[3], "value", values[3])
+            typical_size = getattr(values[9], "value", values[9])
+    
+            return DustSensor(
+                pm1_0=round(float(pm1_0), 2),
+                pm2_5=round(float(pm2_5), 2),
+                pm4_0=round(float(pm4_0), 2),
+                pm10_0=round(float(pm10_0), 2),
+                size=round(float(typical_size), 2),
+            )
+            
 
-    def get_status(self) -> dict:
-        return {
-            "status": "MEASURING" if self.is_measuring else "IDLE",
-            "is_measuring": self.is_measuring,
-            "port": self.port_path,
-            "baudrate": self.baudrate,
-        }
+    mesuare = measure
 
 
-sps30_service = SPS30Service()
+DustDevice = Sps30(port="/dev/serial0", baudrate=115200)

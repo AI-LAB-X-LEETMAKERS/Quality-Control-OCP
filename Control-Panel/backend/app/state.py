@@ -28,15 +28,7 @@ class DustSensor(BaseModel):
     pm2_5: float = 0.0
     pm4_0: float = 0.0
     pm10_0: float = 0.0
-    nc0_5: float = 0.0
-    nc1_0: float = 0.0
-    nc2_5: float = 0.0
-    nc4_0: float = 0.0
-    nc10_0: float = 0.0
-    typical_particle_size: float = 0.0
-    status: str = "IDLE"
-    value: float | None = 0.0
-    current: float | None = 0.0
+    size: float = 0.0
 
 class RPM(BaseModel):
     value: int | None = 0
