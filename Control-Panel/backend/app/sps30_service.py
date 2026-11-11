@@ -1,9 +1,7 @@
+from app.serial_handler import serial_lock_dust
+from app.models import DustSensor
 import sys
-import time
 import asyncio
-from app.state import status_machine
-from app.serial_handler import serial_lock
-from app.state import DustSensor
 
 PORT = "/dev/serial0"
 BAUDRATE = 115200
@@ -33,7 +31,7 @@ class Sps30:
         self.is_measuring = False
 
     async def measure(self) -> DustSensor:
-        async with serial_lock:
+        async with serial_lock_dust.lock:
             if self.device is None:
                 try:
                     self.port = ShdlcSerialPort(port=self.port_path, baudrate=self.baudrate)

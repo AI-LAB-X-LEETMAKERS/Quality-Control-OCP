@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from app.state import DustSensor
+from app.models import DustSensor
 from app.sps30_service import DustDevice
-from app.serial_handler import serial_lock
-from app.state import DustSensor
 
 DustRouter = APIRouter(tags=["dust"])
 

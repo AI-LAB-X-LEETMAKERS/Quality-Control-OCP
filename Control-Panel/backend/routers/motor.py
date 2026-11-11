@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException
-from app.state import Motor
+from app.models import Motor
 from app.serial_handler import serial_lock, serial
 
 # class Motor(BaseModel):
