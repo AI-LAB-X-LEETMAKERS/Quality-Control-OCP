@@ -1,4 +1,4 @@
-import { turnOn, turnOff, sendMotorCommand, runMachineTest } from "./api.js";
+import { turnOn, turnOff, sendMotorCommand, runMachineTest, createDustWebSocket } from "./api.js";
 
 // DOM References
 const backendStatus = document.getElementById("backend-status");
@@ -16,10 +16,30 @@ const clearLog = document.getElementById("clear-log");
 const sectionTabs = document.querySelectorAll("[data-section-target]");
 const sections = document.querySelectorAll(".section-view");
 
+// Dust Sensor Control Panel References
+const dustSensorBadge = document.getElementById("dust-sensor-badge");
+const dustGaugeFill = document.getElementById("dust-gauge-fill");
+const dustGaugeNeedle = document.getElementById("dust-gauge-needle");
+const dustPm10Value = document.getElementById("dust-pm10-value");
+const dustPm1_0 = document.getElementById("dust-pm1-0");
+const dustPm2_5 = document.getElementById("dust-pm2-5");
+const dustPm4_0 = document.getElementById("dust-pm4-0");
+const dustPm10_0 = document.getElementById("dust-pm10-0");
+const dustSize = document.getElementById("dust-size");
+const btnDustSensor = document.getElementById("btn-dust-sensor");
+
+const DUST_GAUGE_MIN = 1;
+const DUST_GAUGE_MAX = 1000;
+const DUST_GAUGE_ARC_LENGTH = 251.33;
+
 let machineRunning = false;
 let machineStartTime = null;
 let elapsedTimer = null;
 let dustPollTimer = null;
+
+let dustSocket = null;
+let dustSensorRunning = false;
+let userStoppedDustSensor = false;
 
 const state = {
   rpm: 1200,
@@ -295,6 +315,133 @@ async function handleMotorAction(action) {
   }
 }
 
+// Dust Sensor Gauge & Readings Helpers
+function setDustSensorBadge(text, statusClass = "") {
+  if (!dustSensorBadge) return;
+  dustSensorBadge.textContent = text;
+  dustSensorBadge.className = statusClass ? `status-badge ${statusClass}` : "status-badge";
+}
+
+function updateDustGauge(pm10Value) {
+  if (pm10Value === null || pm10Value === undefined) {
+    if (dustPm10Value) dustPm10Value.textContent = "0";
+    if (dustGaugeFill) dustGaugeFill.style.strokeDashoffset = String(DUST_GAUGE_ARC_LENGTH);
+    if (dustGaugeNeedle) dustGaugeNeedle.style.transform = "rotate(-90deg)";
+    return;
+  }
+
+  const numericVal = Number(pm10Value) || 0;
+  if (dustPm10Value) {
+    dustPm10Value.textContent = String(numericVal);
+  }
+
+  const clamped = Math.min(DUST_GAUGE_MAX, Math.max(DUST_GAUGE_MIN, numericVal));
+  const ratio = numericVal <= 0 ? 0 : (clamped - DUST_GAUGE_MIN) / (DUST_GAUGE_MAX - DUST_GAUGE_MIN);
+  const dashOffset = DUST_GAUGE_ARC_LENGTH * (1 - ratio);
+  const needleAngle = -90 + ratio * 180;
+
+  if (dustGaugeFill) {
+    dustGaugeFill.style.strokeDashoffset = String(dashOffset);
+  }
+  if (dustGaugeNeedle) {
+    dustGaugeNeedle.style.transform = `rotate(${needleAngle}deg)`;
+  }
+}
+
+function updateDustReadings(data) {
+  if (!data) {
+    if (dustPm1_0) dustPm1_0.textContent = "--";
+    if (dustPm2_5) dustPm2_5.textContent = "--";
+    if (dustPm4_0) dustPm4_0.textContent = "--";
+    if (dustPm10_0) dustPm10_0.textContent = "--";
+    if (dustSize) dustSize.textContent = "--";
+    updateDustGauge(null);
+    return;
+  }
+
+  if (dustPm1_0) dustPm1_0.textContent = String(data.pm1_0 ?? "--");
+  if (dustPm2_5) dustPm2_5.textContent = String(data.pm2_5 ?? "--");
+  if (dustPm4_0) dustPm4_0.textContent = String(data.pm4_0 ?? "--");
+  if (dustPm10_0) dustPm10_0.textContent = String(data.pm10_0 ?? "--");
+  if (dustSize) dustSize.textContent = String(data.size ?? "--");
+
+  const pm10 = Number(data.pm10_0 ?? 0);
+  updateDustGauge(pm10);
+  updateDustMeter(pm10);
+}
+
+function toggleDustSensor() {
+  if (!btnDustSensor) return;
+
+  if (!dustSensorRunning && !dustSocket) {
+    userStoppedDustSensor = false;
+    btnDustSensor.disabled = true;
+    btnDustSensor.textContent = "Starting...";
+    setDustSensorBadge("STARTING", "sending");
+
+    try {
+      const ws = createDustWebSocket();
+      dustSocket = ws;
+
+      ws.onopen = () => {
+        dustSensorRunning = true;
+        btnDustSensor.disabled = false;
+        btnDustSensor.textContent = "Shutdown Sensor";
+        btnDustSensor.classList.add("running");
+        setDustSensorBadge("ACTIVE", "ready");
+        writeLog("DUST SENSOR", "Connected to /ws/dust - sensor started.");
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          updateDustReadings(data);
+        } catch (err) {
+          writeLog("DUST SENSOR PARSE ERROR", err.message);
+        }
+      };
+
+      ws.onerror = () => {
+        setDustSensorBadge("ERROR", "error");
+        writeLog("DUST SENSOR ERROR", "WebSocket error on /ws/dust");
+      };
+
+      ws.onclose = (event) => {
+        dustSocket = null;
+        dustSensorRunning = false;
+        btnDustSensor.disabled = false;
+        btnDustSensor.textContent = "Start Sensor";
+        btnDustSensor.classList.remove("running");
+
+        if (userStoppedDustSensor) {
+          setDustSensorBadge("OFF", "");
+          updateDustReadings(null);
+          writeLog("DUST SENSOR", "Sensor shutdown completed.");
+        } else {
+          setDustSensorBadge("ERROR", "error");
+          writeLog(
+            "DUST SENSOR DISCONNECTED",
+            event.reason || `Connection closed (code ${event.code})`
+          );
+        }
+      };
+    } catch (error) {
+      dustSocket = null;
+      dustSensorRunning = false;
+      btnDustSensor.disabled = false;
+      btnDustSensor.textContent = "Start Sensor";
+      btnDustSensor.classList.remove("running");
+      setDustSensorBadge("ERROR", "error");
+      writeLog("DUST SENSOR ERROR", error.message);
+    }
+  } else if (dustSocket) {
+    userStoppedDustSensor = true;
+    btnDustSensor.disabled = true;
+    btnDustSensor.textContent = "Shutting down...";
+    dustSocket.close();
+  }
+}
+
 // Event Listeners
 if (startMachineButton) {
   startMachineButton.addEventListener("click", toggleMachineState);
@@ -302,6 +449,10 @@ if (startMachineButton) {
 
 if (btnMachineTest) {
   btnMachineTest.addEventListener("click", handleMachineTest);
+}
+
+if (btnDustSensor) {
+  btnDustSensor.addEventListener("click", toggleDustSensor);
 }
 
 sectionTabs.forEach((tab) => {

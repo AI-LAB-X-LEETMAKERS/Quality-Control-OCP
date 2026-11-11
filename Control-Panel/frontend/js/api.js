@@ -1,4 +1,4 @@
-import { API_BASE_URL, ENDPOINTS } from "./config.js";
+import { API_BASE_URL, WS_BASE_URL, ENDPOINTS } from "./config.js";
 
 async function request(path, options = {}) {
   const hasBody = options.body !== undefined && options.body !== null;
@@ -47,4 +47,12 @@ export function sendMotorCommand(action, motor) {
 
 export function runMachineTest() {
   return request(ENDPOINTS.on, { method: "GET" });
+}
+
+export function fetchDustReading() {
+  return request(ENDPOINTS.dust, { method: "GET" });
+}
+
+export function createDustWebSocket() {
+  return new WebSocket(`${WS_BASE_URL}${ENDPOINTS.wsDust}`);
 }

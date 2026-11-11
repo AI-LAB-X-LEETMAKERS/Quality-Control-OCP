@@ -101,6 +101,93 @@
                     </button>
                 </div>
 
+                <!-- Dust Sensor Postcard -->
+                <div class="postcard-item dust-sensor-card" id="dust-sensor-card">
+                    <div class="component-header">
+                        <span>Dust Sensor</span>
+                        <span id="dust-sensor-badge" class="status-badge">OFF</span>
+                    </div>
+
+                    <!-- PM10 Gauge Meter (1 - 1000 µg/m³) -->
+                    <div class="dust-gauge-wrapper">
+                        <svg class="dust-gauge-svg" viewBox="0 0 220 130" aria-label="PM10 Dust Gauge Meter">
+                            <defs>
+                                <linearGradient id="dustGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#10b981" />
+                                    <stop offset="60%" stop-color="#f59e0b" />
+                                    <stop offset="100%" stop-color="#ef4444" />
+                                </linearGradient>
+                            </defs>
+                            <!-- Background Track Arc -->
+                            <path
+                                class="dust-gauge-track"
+                                d="M 30 105 A 80 80 0 0 1 190 105"
+                                fill="none"
+                                stroke="#e2e8f0"
+                                stroke-width="14"
+                                stroke-linecap="round"
+                            />
+                            <!-- Active Fill Arc -->
+                            <path
+                                id="dust-gauge-fill"
+                                class="dust-gauge-fill"
+                                d="M 30 105 A 80 80 0 0 1 190 105"
+                                fill="none"
+                                stroke="url(#dustGaugeGradient)"
+                                stroke-width="14"
+                                stroke-linecap="round"
+                                stroke-dasharray="251.33"
+                                stroke-dashoffset="251.33"
+                            />
+                            <!-- Gauge Needle -->
+                            <g id="dust-gauge-needle" class="dust-gauge-needle">
+                                <line x1="110" y1="105" x2="110" y2="38" stroke="#0f172a" stroke-width="2.5" stroke-linecap="round" />
+                                <circle cx="110" cy="105" r="5" fill="#0f172a" />
+                            </g>
+                            <!-- Min / Max Range Labels -->
+                            <text x="16" y="124" class="dust-gauge-scale-label">1 µg/m³</text>
+                            <text x="160" y="124" class="dust-gauge-scale-label">1000 µg/m³</text>
+                        </svg>
+
+                        <div class="dust-gauge-readout">
+                            <span class="dust-gauge-metric">PM10</span>
+                            <div class="dust-gauge-value-group">
+                                <span id="dust-pm10-value" class="dust-gauge-value">0</span>
+                                <span class="dust-gauge-unit">µg/m³</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Live Readings Breakdown -->
+                    <div class="form-grid dust-readings-grid">
+                        <div class="dust-reading-box">
+                            <span class="field-label">PM1.0</span>
+                            <div class="dust-reading-val"><span id="dust-pm1-0">--</span> <small>µg/m³</small></div>
+                        </div>
+                        <div class="dust-reading-box">
+                            <span class="field-label">PM2.5</span>
+                            <div class="dust-reading-val"><span id="dust-pm2-5">--</span> <small>µg/m³</small></div>
+                        </div>
+                        <div class="dust-reading-box">
+                            <span class="field-label">PM4.0</span>
+                            <div class="dust-reading-val"><span id="dust-pm4-0">--</span> <small>µg/m³</small></div>
+                        </div>
+                        <div class="dust-reading-box">
+                            <span class="field-label">PM10.0</span>
+                            <div class="dust-reading-val"><span id="dust-pm10-0">--</span> <small>µg/m³</small></div>
+                        </div>
+                        <div class="dust-reading-box form-group-full">
+                            <span class="field-label">Particle Size</span>
+                            <div class="dust-reading-val"><span id="dust-size">--</span></div>
+                        </div>
+                        <div class="form-group-full">
+                            <button type="button" id="btn-dust-sensor" class="btn dust-toggle-btn" style="width: 100%; margin-top: 8px;">
+                                Start Sensor
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Port Postcard -->
                 <div class="postcard-item component-form" data-motor="port">
                     <div class="component-header">Port</div>
