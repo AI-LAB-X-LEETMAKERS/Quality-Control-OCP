@@ -1,3 +1,0 @@
-- [x] Add the SPS30 library and WebSocket stream to the project
-- [ ] Design a new architecture for PyPylon integration
-- [ ] Test the camera connection and basic image acquisition with PyPylon

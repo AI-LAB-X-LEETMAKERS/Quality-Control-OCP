@@ -1,10 +1,6 @@
 from pydantic import BaseModel, Field
 from enum import Enum
 
-class Direction(Enum):
-    RIGHT = "RIGHT"
-    LEFT = "LEFT"
-
 class Stats(Enum):
     IDLE = "IDLE"
     CALIBRATION = "CALIBRATION"
@@ -13,11 +9,21 @@ class Stats(Enum):
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
 
-class Motor(BaseModel):
-    name: str | None = ""
-    speed: int | None = 0
-    direction: Direction | None = Direction.RIGHT
-    angle: int | None = 0
+class Port(BaseModel):
+    angle: int
+
+class cleaning(BaseModel):
+    speed: int
+    forward: bool
+    enabled:bool
+
+class vibrator(BaseModel):
+    speed:int
+    forward:bool
+
+class vaccum(BaseModel):
+    throttle: int
+    armed: bool    
 
 class WeightSensor(BaseModel):
     value: int | None = 0
@@ -33,13 +39,3 @@ class DustSensor(BaseModel):
 class RPM(BaseModel):
     value: int | None = 0
 
-class StatMachine(BaseModel):
-    stats: Stats = Stats.IDLE
-    cleaning: Motor = Field(default_factory=Motor)
-    vibrator: Motor = Field(default_factory=Motor)
-    port: Motor = Field(default_factory=Motor)
-    weight: WeightSensor = Field(default_factory=WeightSensor)
-    dust: DustSensor = Field(default_factory=DustSensor)
-    rpm: RPM = Field(default_factory=RPM)
-
-status_machine = StatMachine()
